@@ -434,8 +434,32 @@ details p{margin-top:8px;color:var(--soft)}
 .vrules{background:var(--yellow);border-radius:var(--r-lg);padding:18px 22px;margin-top:16px}
 .vrules ul{margin:6px 0 0;padding-left:1.2rem}.vrules li{margin:3px 0}
 @media (max-width:820px){.vidwrap,.vgrid{grid-template-columns:1fr}}
+.aip{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px;margin-top:20px;align-items:start}
+.aip .pv{background:#fff;border:3px solid var(--ink);border-radius:var(--r-lg);padding:10px;box-shadow:6px 6px 0 var(--ink);position:sticky;top:90px}
+.aip .pv img{width:100%;display:block;border-radius:10px}
+.aip .pv .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.aip .pv .btns a{font-family:var(--thai-display);font-weight:500;font-size:.9rem;padding:7px 14px;border:3px solid var(--ink);border-radius:999px;text-decoration:none;color:var(--ink);background:var(--lime)}
+.aip .pv .btns a.alt{background:#fff}
+.raw{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:6px 0 4px}
+.raw figure{margin:0;background:#fff;border:3px solid var(--ink);border-radius:var(--r-md);padding:6px;text-align:center;font-size:.78rem;line-height:1.3}
+.raw figure .im{height:118px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:repeating-conic-gradient(#EEE 0 25%,#fff 0 50%) 0 0/14px 14px}
+.raw figure img{max-width:100%;max-height:118px;display:block}
+.raw figure b{display:block;font-family:var(--thai-display);font-weight:600;font-size:.86rem;margin-top:4px}
+.aisteps{display:grid;gap:10px}
+.aisteps .s{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start;background:#fff;border:3px solid var(--ink);border-radius:var(--r-md);padding:12px 14px;font-size:.92rem}
+.aisteps .s b{font-family:var(--thai-display);font-weight:600;display:block;font-size:1rem}
+.aisteps .s i{font-style:normal;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:1.2rem;border-radius:58% 42% 55% 45%/48% 60% 40% 52%;border:2.5px solid var(--ink)}
+.aisteps .s li b{display:inline;font-family:inherit;font-size:inherit;font-weight:600}.aisteps .s ul{margin:4px 0 0;padding-left:1.1rem}.aisteps .s li{margin:2px 0}
+.layers{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:18px 0 6px}
+.layers div{border:3px solid var(--ink);border-radius:14px;padding:10px 8px;font-size:.8rem;line-height:1.3;text-align:center}
+.layers div b{display:block;font-family:var(--display);font-weight:800;font-size:1.3rem}
+.agrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px;align-items:start}
+.aiwarn{background:var(--pink-bg,#FFE2F1);border:3px solid var(--ink);border-radius:var(--r-lg);padding:16px 20px;margin-top:16px}
+.aiwarn ul{margin:6px 0 0;padding-left:1.2rem}.aiwarn li{margin:3px 0}
+@media (max-width:900px){.aip,.agrid{grid-template-columns:1fr}.aip .pv{position:static}.raw{grid-template-columns:repeat(2,1fr)}.layers{grid-template-columns:repeat(3,1fr)}}
 
-.dlrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
+
+.dlrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:20px}
 .dl{border:3px solid var(--ink);border-radius:var(--r-lg);padding:20px 22px;display:grid;gap:10px;align-content:start}
 .dl h3{font-size:1.3rem}.dl p{font-size:.92rem}
 .dl .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
@@ -458,7 +482,7 @@ details p{margin-top:8px;color:var(--soft)}
       </div>
       <h1>Prompt to Poster <span class="pill">Toolkit</span></h1>
       <p class="lead">เปลี่ยนผลการศึกษาของทีมให้เป็นโปสเตอร์ UX/UI ขนาด 85×120 cm แล้วซ้อมพิชกับซ้อมรับคำถามกรรมการด้วย AI กรอกข้อมูลทีมด้านล่าง ทุก prompt จะเติมชื่อผลงานให้เอง กด Copy แล้ววางในแอป AI ได้เลย</p>
-      <nav class="nav" aria-label="ไปยังส่วนต่าง ๆ"><a href="#speaker">วิทยากร</a><a href="#guide">คู่มือ</a><a href="#cast">ตัวละคร</a><a href="#zones">โซนโปสเตอร์</a><a href="#anatomy">เจาะลึก 9 โซน</a><a href="#example">ตัวอย่าง MediMate</a><a href="#video">คลิปพิช</a><a href="#prompts">คลัง prompt</a><a href="#studio">Visual Studio</a><a href="#stage">เวทีพิช</a><a href="#skill">Skill</a><a href="#checklist">เช็กลิสต์</a></nav>
+      <nav class="nav" aria-label="ไปยังส่วนต่าง ๆ"><a href="#speaker">วิทยากร</a><a href="#guide">คู่มือ</a><a href="#cast">ตัวละคร</a><a href="#zones">โซนโปสเตอร์</a><a href="#anatomy">เจาะลึก 9 โซน</a><a href="#example">ตัวอย่าง MediMate</a><a href="#video">คลิปพิช</a><a href="#aiposter">โปสเตอร์ AI</a><a href="#prompts">คลัง prompt</a><a href="#studio">Visual Studio</a><a href="#stage">เวทีพิช</a><a href="#slides-dl">สไลด์</a><a href="#skill">Skill</a><a href="#checklist">เช็กลิสต์</a></nav>
     </div>
     <div class="cast" aria-hidden="true">
       <div class="ptile" style="background:#FFE24D;transform:rotate(-4deg)"><svg class="doodle" viewBox="0 0 200 240"><use href="#c-fan"/></svg></div>
@@ -481,6 +505,7 @@ details p{margin-top:8px;color:var(--soft)}
       <div class="contact">
         <a class="mail" href="mailto:pruet@mfu.ac.th">✉ pruet@mfu.ac.th</a>
         <a class="link" href="https://linktr.ee/spidyhero">🔗 linktr.ee/spidyhero</a>
+        <a class="link" style="background:var(--yellow)" href="https://spidyhero.github.io/prompt-to-poster-toolkit/downloads/From_Prompt_to_Visual_Pitch_slides.pdf">⬇ สไลด์บรรยาย (PDF)</a>
       </div>
     </div>
   </div>
@@ -838,6 +863,58 @@ details p{margin-top:8px;color:var(--soft)}
   <div class="vgrid" id="vgrid"></div>
 </section>
 
+<section class="wrap" id="aiposter">
+  <span class="kicker">โปสเตอร์จากภาพ AI</span>
+  <h2>MediMate เวอร์ชันกราฟิกจาก ChatGPT</h2>
+  <p class="lead">โปสเตอร์ 85×120 cm ฉบับนี้สร้างกราฟิกทั้งหมดด้วย ChatGPT จาก 4 prompt แล้วนำชิ้นส่วนมาประกอบเองกับหัวข้อ เนื้อหา และกราฟของทั้ง 9 โซน ด้านล่างมี prompt ที่ใช้จริงและขั้นตอนทั้งหมด ข้อมูลในโปสเตอร์เป็นข้อมูลสมมติเพื่อการสอน</p>
+  <div class="aip">
+    <div class="pv rv">
+      <img src="media/medimate_poster_ai.jpg" alt="โปสเตอร์ MediMate ยาเตือนใจ ขนาด 85x120 cm ใช้กราฟิกจาก ChatGPT ครบ 9 โซน: หัวเรื่อง ปัญหา ผู้ใช้ กระบวนการ แนวทางแก้ไขพร้อมหน้าจอแอป 4 หน้า ผลทดสอบ ก้าวต่อไป Try it และทีม" loading="lazy">
+      <div class="btns"><a href="media/medimate_poster_ai_full.jpg" target="_blank" rel="noopener">ดูภาพเต็ม</a><a class="alt" href="https://spidyhero.github.io/prompt-to-poster-toolkit/downloads/MediMate_Poster_ChatGPT_85x120.pdf" target="_blank" rel="noopener">⬇ PDF พร้อมพิมพ์ 85×120 cm</a></div>
+    </div>
+    <div>
+      <h3 style="font-size:1.3rem;margin:0 0 6px">ภาพดิบ 4 ภาพที่ได้จาก ChatGPT</h3>
+      <div class="raw">
+        <figure><div class="im"><img src="media/gpt_bg.jpg" alt="ภาพพื้นหลังแนวตั้ง ขอบมีบล็อบสี เม็ดยา นาฬิกา โทรศัพท์ ตรงกลางว่าง" loading="lazy"></div><b>1 พื้นหลัง</b>2:3 ตรงกลางว่าง</figure>
+        <figure><div class="im"><img src="media/gpt_stickers.png" alt="แผ่นสติกเกอร์ ลูกศร บับเบิล ประกาย เส้นหยัก ป้ายหยัก เม็ดยายิ้ม นาฬิกายิ้ม" loading="lazy"></div><b>2 สติกเกอร์</b>12 ชิ้น พื้นโปร่งใส</figure>
+        <figure><div class="im"><img src="media/gpt_ui.jpg" alt="หน้าจอแอป MediMate 4 หน้า Today Scan Reminder Family" loading="lazy"></div><b>3 หน้าจอแอป</b>4 หน้าจอเรียงกัน</figure>
+        <figure><div class="im"><img src="media/gpt_icons.png" alt="ไอคอนกระบวนการ 5 วง และภาพคุณยายถือโทรศัพท์และกล่องยา" loading="lazy"></div><b>4 ไอคอน + persona</b>พื้นโปร่งใส</figure>
+      </div>
+      <h3 style="font-size:1.3rem;margin:18px 0 8px">ขั้นตอนจาก prompt ถึงโปสเตอร์</h3>
+      <div class="aisteps">
+        <div class="s rv"><i style="background:var(--lime)">1</i><div><b>ทำเนื้อหาให้ครบก่อนสร้างภาพ</b>ร่างข้อความและตัวเลขทั้ง 9 โซนจากไฟล์ผลการศึกษาให้เสร็จ (ใช้คลัง prompt ด้านล่าง) แล้วนับว่าต้องใช้ภาพอะไรบ้าง เช่น พื้นหลัง หน้าจอแอป ไอคอนกระบวนการ ภาพ persona สติกเกอร์</div></div>
+        <div class="s rv"><i style="background:var(--pink)">2</i><div><b>ล็อกสไตล์และรหัสสีครั้งเดียว</b>เขียนสไตล์ (flat vector playful pop, เส้นขอบหนาสีเข้ม) และรหัสสี hex ไว้ใน prompt แรก ภาพถัดไปพิมพ์ว่า "same style and palette" ทุกภาพจะดูเป็นชุดเดียวกัน</div></div>
+        <div class="s rv"><i style="background:var(--yellow)">3</i><div><b>สั่ง ChatGPT ทีละภาพในแชทเดียว</b>สร้างภาพทีละภาพในแชทเดียวกันตามลำดับ: พื้นหลัง 2:3 → แผ่นสติกเกอร์ 1:1 → หน้าจอแอป 3:2 → ไอคอน + persona 1:1
+          <ul><li>ภาพที่จะตัดเป็นชิ้น ให้ขอ <b>transparent background</b> และ "each element clearly separated"</li><li>พื้นหลังต้องสั่ง <b>no text, no letters</b> และเว้นที่ว่างตรงกลาง</li><li>ข้อความบนหน้าจอแอปให้ใส่เครื่องหมายคำพูดและเขียนว่า "spelled exactly as written"</li></ul></div></div>
+        <div class="s rv"><i style="background:#E1E8FF">4</i><div><b>ตรวจภาพก่อนใช้</b>ซูมดูว่าตัวสะกดบนหน้าจอถูกต้อง ไม่มีตัวอักษรมั่ว นิ้วมือหรือใบหน้าไม่ผิดรูป และไม่มีโลโก้แบรนด์จริง ถ้าผิดให้กด Edit แล้วสั่งแก้เฉพาะจุดนั้น</div></div>
+        <div class="s rv"><i style="background:var(--orange)">5</i><div><b>ตัดชิ้นส่วน</b>ตัดสติกเกอร์ ไอคอน และหน้าจอทีละชิ้นใน Canva, Figma หรือเครื่องมือลบพื้นหลัง เก็บเป็นไฟล์ PNG พื้นโปร่งใสแยกชิ้น ตั้งชื่อไฟล์ให้หาง่าย เช่น icon-define.png</div></div>
+        <div class="s rv"><i style="background:#C9B8FF">6</i><div><b>ประกอบเป็น 6 ชั้น</b>ทำไฟล์ขนาด 850×1200 mm ใน Figma หรือ Canva หรือให้ AI แชทช่วยประกอบเป็น HTML แล้ววางชิ้นส่วนเป็นชั้นตามแถบด้านล่าง</div></div>
+        <div class="s rv"><i style="background:var(--mint,#2BC48A)">7</i><div><b>ส่งออก ตรวจ และระบุการใช้ AI</b>ส่งออกเป็น PDF ขนาดจริง ซูม 100% ดูความคม ให้คนนอกด้อมรีวิว แล้วระบุบนโปสเตอร์ว่าภาพไหนสร้างจาก AI ตัวไหน</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="layers">
+    <div style="background:#FFF8EC"><b>1</b>พื้นหลัง AI เต็มหน้า</div>
+    <div style="background:#fff"><b>2</b>การ์ดขาว 95% ขอบดำ แยก 9 โซน</div>
+    <div style="background:var(--lime)"><b>3</b>หัวข้อโซน และข้อความพิมพ์เอง</div>
+    <div style="background:var(--pink)"><b>4</b>หน้าจอแอป ไอคอน persona จาก AI</div>
+    <div style="background:#E1E8FF"><b>5</b>กราฟและ QR ทำเองจากตัวเลขจริง</div>
+    <div style="background:var(--yellow)"><b>6</b>สติกเกอร์ตกแต่ง ไม่บังข้อความ</div>
+  </div>
+  <div class="aiwarn">
+    <b style="font-family:var(--thai-display)">ข้อควรระวังเมื่อใช้ภาพ AI ทำโปสเตอร์</b>
+    <ul>
+      <li><b>อย่าให้ AI วาดกราฟตัวเลข</b> สัดส่วนของกราฟที่ AI วาดมักไม่ตรงกับข้อมูล ควรวาดกราฟเองใน Figma, Canva หรือ Excel</li>
+      <li><b>อย่าให้ AI เขียนข้อความภาษาไทยในภาพ</b> มักสะกดผิดหรือสระลอย ให้สร้างภาพที่ไม่มีตัวอักษรแล้วพิมพ์ข้อความเองตอนจัดหน้า</li>
+      <li><b>ภาพ AI ได้ความละเอียดราว 1,000–1,500 px</b> พอสำหรับพื้นหลังและภาพตกแต่งที่ดูจากระยะ 1–2 เมตร แต่ตัวหนังสือสำคัญควรเป็นข้อความที่พิมพ์เอง</li>
+      <li><b>หน้าจอแอปจาก AI เป็นภาพประกอบ ไม่ใช่ prototype จริง</b> ถ้าทีมมีหน้าจอจาก Figma ให้ใช้หน้าจอจริงในโซน 5 ดีกว่า</li>
+      <li><b>ห้ามสร้างภาพเลียนแบบใบหน้าผู้ให้สัมภาษณ์</b> หรือแบรนด์และตัวละครที่มีลิขสิทธิ์</li>
+    </ul>
+  </div>
+  <h3 style="margin-top:28px;font-size:1.4rem">Prompt ที่ใช้จริง copy ไปปรับใช้ได้เลย</h3>
+  <div class="agrid" id="agrid"></div>
+</section>
+
 <section class="wrap" id="prompts">
   <span class="kicker">คลัง prompt</span>
   <h2>17 prompt ใน 6 ขั้น</h2>
@@ -917,10 +994,12 @@ details p{margin-top:8px;color:var(--soft)}
   </div>
 </section>
 <section class="wrap" id="skill">
-  <span class="kicker">ติดตั้งเป็น Skill</span>
-  <h2>ดาวน์โหลด Skill ไปใช้ใน Claude</h2>
+  <span class="kicker">ดาวน์โหลด</span>
+  <h2>ดาวน์โหลดสไลด์และ Skill</h2>
   <p class="lead">Skill คือชุดคำสั่งที่ติดตั้งให้ Claude ครั้งเดียว แล้ว Claude จะทำงานตามขั้นตอนของ toolkit นี้ให้อัตโนมัติ ไม่ต้อง copy prompt ทีละอัน และแก้ไขให้เป็นแบบของทีมเองได้</p>
   <div class="dlrow">
+    <div class="dl rv" id="slides-dl" style="background:var(--yellow)"><span class="badge" style="background:#fff;justify-self:start">สไลด์บรรยาย</span><h3>From Prompt to Visual Pitch</h3><p>สไลด์ 33 หน้าที่ใช้ในการอบรม ดาวน์โหลดเป็น PDF หรือเปิดฉบับเว็บที่มีภาพเคลื่อนไหวและคลิปตัวอย่าง</p>
+      <div class="btns"><a class="dlb" href="https://spidyhero.github.io/prompt-to-poster-toolkit/downloads/From_Prompt_to_Visual_Pitch_slides.pdf">⬇ ดาวน์โหลด PDF</a><a class="dlb" style="background:#fff;color:var(--ink);border:2px solid var(--ink)" href="https://spidyhero.github.io/prompt-to-poster-toolkit/slides/">▶ เปิดสไลด์ฉบับเว็บ</a></div><span class="meta">PDF 4.5 MB · 16:9</span></div>
     <div class="dl rv" style="background:var(--lime)"><span class="badge" style="background:#fff;justify-self:start">Skill 1</span><h3>ux-poster-pitch-coach</h3><p>คิดและออกแบบโปสเตอร์ UX/UI 85×120 cm จากไฟล์ผลการศึกษา ครบ 6 ขั้น ตั้งแต่เช็กข้อมูล ร่าง 9 โซน ภาพ รีวิว พิช จนถึงซ้อมตอบกรรมการ</p>
       <div class="btns"><a class="dlb" href="https://drive.google.com/uc?export=download&id=1ftmWvX42SF26cmoaOkZ3ps662Vcyluyn">⬇ ดาวน์โหลด .zip</a><button class="copy2" data-t="skill">Copy SKILL.md</button></div><span class="meta">7 KB · Google Drive</span></div>
     <div class="dl rv" style="background:var(--pink)"><span class="badge" style="background:#fff;justify-self:start">Skill 2</span><h3>ux-pitch-video-maker</h3><p>ทำคลิปพิชแอป 30–45 วินาที 16:9 แบบ MediMate: storyboard บทพากย์ไทย ไฟล์ซับ .srt และไฟล์ HTML โมชันกราฟิกสำหรับอัดหน้าจอเป็น MP4</p>
@@ -1441,6 +1520,12 @@ function renderVideo(){const v=studioVals();document.getElementById("vgrid").inn
 renderVideo();
 ["#f-name","#f-user","#f-cat","#s-topic","#s-colors"].forEach(q=>document.querySelector(q).addEventListener("input",renderVideo));
 document.addEventListener("click",e=>{if(e.target.closest("#styles button"))setTimeout(renderVideo,0)});
+</script>
+<script>
+window.GP=[{"h": "ภาพ 1 พื้นหลังโปสเตอร์", "k": "img", "p": "Create an image: vertical poster background, aspect ratio 2:3, flat vector playful pop style, bold rounded blob shapes, squiggles, sparkles and soft dot pattern around the edges only, inspired by a medication reminder app for older adults (small pill capsules, clock, heart, phone shapes as abstract decoration). Color palette: cream #FFF8EC base with violet #6B4BF2, lime green #C8F04A, bubblegum pink #FF8AC6, sunny yellow #FFD43B, blue #3E68FF and thick dark ink #17142B outlines. Keep a large calm empty cream area in the center and top third for text. No text, no letters, no logos, high resolution, print-ready.", "tip": "เปลี่ยนส่วนที่อยู่ในวงเล็บเป็นสิ่งของในหัวข้อของทีม ประโยค \"empty cream area in the center\" คือการเว้นที่ไว้วางเนื้อหา"}, {"h": "ภาพ 2 แผ่นสติกเกอร์ 12 ชิ้น", "k": "img", "p": "Now create a separate image: a sticker sheet of 12 graphic elements for the same UX poster, same flat vector playful pop style and same color palette with thick dark ink #17142B outlines: 3 curvy arrows, 2 speech bubbles, 3 sparkle stars, 1 squiggle line, 1 round badge, 1 pill capsule with a smiling face, 1 alarm clock with a smiling face. Each element clearly separated with generous space between them, transparent background, square 1:1, no text, no letters.", "tip": "ส่งต่อในแชทเดิม สไตล์จะต่อเนื่องกับภาพ 1 ลูกศรใช้เชื่อมขั้นตอน บับเบิลใช้ใส่ quote และป้ายหยักใช้ทำสติกเกอร์ \"ตัวอย่างสมมติ\""}, {"h": "ภาพ 3 หน้าจอแอป 4 หน้า", "k": "img", "p": "Next image: clean UI mockup of a mobile app called MediMate, a medication reminder for older adults. Show exactly 4 smartphone screens side by side in a row, front view, same size, landscape 3:2 image, transparent or plain cream background. Flat modern UI in the same palette (cream, violet #6B4BF2, lime #C8F04A, pink #FF8AC6, yellow #FFD43B, ink #17142B), large text and big touch targets for seniors. Screen 1 \"Today\": greeting \"Hello, Somjai\", list of 3 morning pills with colored capsule icons, one huge round lime button labeled \"Taken\". Screen 2 \"Scan\": camera view framing a medicine blister pack with lime corner brackets, result card \"Blood pressure 5 mg - 1 tablet after breakfast\", button \"Save\". Screen 3 \"Reminder\": violet screen, round avatar of a young woman, label \"Voice from May\", audio waveform, buttons \"Play again\" and \"Taken\". Screen 4 \"Family\": title \"Mom today\", donut chart 2/3, timeline rows \"Morning 08:12 Taken\", \"Noon 12:20 Taken\", \"Evening 18:00 Pending\". Keep all on-screen text in English, crisp and spelled exactly as written.", "tip": "ระบุทุกหน้าจอว่ามีอะไรบ้างพร้อมข้อความในเครื่องหมายคำพูด ภาษาอังกฤษสะกดถูกกว่าภาษาไทยมาก แต่ละหน้าจอควรตอบ insight 1 ข้อ"}, {"h": "ภาพ 4 ไอคอนกระบวนการ + persona", "k": "img", "p": "Next image, square 1:1, transparent background, same flat vector playful pop style and palette with thick ink outlines: a row of 5 matching round icon badges for a design process, left to right: Empathize (ear and heart), Define (target), Ideate (lightbulb), Prototype (phone with pencil), Test (checklist with magnifier), each badge a different palette color, plus below them a friendly half-body illustration of a 68-year-old Thai grandmother with gray hair in a bun and round glasses, holding a smartphone and a weekly pill box, smiling. No text, no letters.", "tip": "persona เป็นภาพวาดตัวแทนกลุ่มผู้ใช้ ห้ามอ้างอิงหน้าตาผู้ให้สัมภาษณ์จริง ปรับขั้นตอนให้ตรงกับกระบวนการที่ทีมทำจริง"}, {"h": "ประกอบโปสเตอร์ด้วย AI แชท", "k": "chat", "p": "ฉันแนบภาพจาก ChatGPT 4 ไฟล์ (พื้นหลัง, แผ่นสติกเกอร์, หน้าจอแอป 4 หน้า, ไอคอนกระบวนการ + persona) และไฟล์เนื้อหาโปสเตอร์ 9 โซนของผลงาน {name}\nช่วยประกอบเป็นโปสเตอร์ HTML ขนาด 850×1200 (1px = 1 mm) แล้วส่งออก PDF ขนาด 850×1200 mm:\n1) ตัดภาพแต่ละชิ้นออกเป็น PNG พื้นโปร่งใส (หน้าจอแยก 4 ชิ้น ไอคอนแยก 5 ชิ้น persona สติกเกอร์แต่ละชิ้น)\n2) ใช้ภาพพื้นหลังเต็มหน้า วางเนื้อหาในการ์ดขาวโปร่ง 95% ขอบดำ 3px มุมโค้ง แยก 9 โซนตามลำดับ: หัวเรื่อง, ปัญหา, รู้จักผู้ใช้, กระบวนการ, แนวทางแก้ไข, ทดสอบ, ก้าวต่อไป, Try it, ทีม/อ้างอิง/การใช้ AI\n3) ใช้ข้อความจากไฟล์ของฉันเท่านั้น ห้ามแต่งตัวเลขเพิ่ม และวาดกราฟเองจากตัวเลขจริงด้วย SVG\n4) วางสติกเกอร์ตกแต่งโดยไม่บังข้อความ\n5) ใช้ฟอนต์ Mitr สำหรับหัวข้อ และ Anuphan สำหรับเนื้อหา ตัวหนังสือเล็กสุดไม่ต่ำกว่า 9 mm\n6) ตรวจว่าทุกโซนไม่ล้นกรอบ แล้วส่งภาพพรีวิวให้ดูก่อนส่งออก PDF", "tip": "ใช้กับ Claude ได้ ถ้าใช้ Figma หรือ Canva ให้ทำตามข้อ 2–5 เอง"}, {"h": "ให้คนนอกด้อมรีวิวโปสเตอร์ AI", "k": "chat", "p": "(แชทใหม่ ไม่แนบไฟล์งานวิจัย) ฉันแนบภาพโปสเตอร์มา 1 ภาพ ช่วยตอบในฐานะผู้ชมที่เดินผ่านโปสเตอร์:\n1) ใน 5 วินาทีแรก คุณเข้าใจว่าผลงานนี้คืออะไร ช่วยใคร\n2) ภาพตกแต่งชิ้นไหนแย่งความสนใจจากเนื้อหาหรือบังข้อความ\n3) มีข้อความหรือตัวเลขในภาพ AI ที่สะกดผิดหรือขัดกับเนื้อหาไหม\n4) กราฟอ่านเข้าใจไหม หน่วยครบไหม\n5) ถ้าตัดภาพตกแต่งออกได้ 1 ชิ้น ควรตัดชิ้นไหน เพราะอะไร", "tip": "เปิดแชทใหม่ทุกครั้ง AI จะได้มองแบบคนเพิ่งเห็นโปสเตอร์ครั้งแรก"}];
+function renderGP(){const v=studioVals();document.getElementById("agrid").innerHTML=GP.map((x,i)=>pcard("g"+i,x.h,`<span class="kind ${x.k}">${x.k==="img"?"AI สร้างภาพ · ChatGPT":"AI แชท"}</span>`,x.p,x.tip,v)).join("")}
+renderGP();
+["#f-name","#f-user","#f-cat"].forEach(q=>document.querySelector(q).addEventListener("input",renderGP));
 </script>
 </body>
 </html>
