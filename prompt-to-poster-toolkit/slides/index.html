@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From Prompt to Visual Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Mitr:wght@500;600&family=Anuphan:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: 1920x1080 stage scaled to fit; one idea per slide; playful pop theme */
+  --paper:#FFF8EC; --ink:#17142B; --soft:#5A5470;
+  --purple:#6B4BF2; --lime:#C8F04A; --pink:#FF8AC6; --orange:#FF7A2F; --yellow:#FFD43B; --blue:#3E68FF; --mint:#2BC48A;
+  --pink-bg:#FFE2F1; --blue-bg:#E1E8FF;
+  --display:"Bricolage Grotesque","Mitr",system-ui,sans-serif;
+  --thai-display:"Mitr","Bricolage Grotesque",system-ui,sans-serif;
+  --body:"Anuphan","Mitr",system-ui,sans-serif;
+  --ease:cubic-bezier(.2,.9,.25,1.15);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--ink);font-family:var(--body);color:var(--ink);overflow:hidden}
+#viewport{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+#deck{width:1920px;height:1080px;position:relative;flex:none;transform-origin:center center}
+.slide{position:absolute;inset:0;background:var(--paper);padding:110px 130px;overflow:hidden;opacity:0;visibility:hidden;transition:opacity .45s ease,visibility 0s .45s}
+.slide.active{opacity:1;visibility:visible;transition:opacity .45s ease}
+h1,h2,h3{margin:0;font-family:var(--thai-display);font-weight:600;line-height:1.15}
+p{margin:0}
+.h-xl{font-family:var(--display);font-weight:800;font-size:150px;line-height:.92;letter-spacing:-.03em}
+.h-l{font-size:84px}
+.h-m{font-size:56px}
+.big{font-size:40px;line-height:1.55}
+.body{font-size:34px;line-height:1.6}
+.small{font-size:28px;line-height:1.5}
+.kicker{display:inline-block;font-family:var(--thai-display);font-weight:500;font-size:28px;padding:8px 26px;border-radius:999px;background:var(--ink);color:var(--paper);transform:rotate(-2deg);margin-bottom:28px}
+.pill{display:inline-block;border-radius:999px;padding:0 .3em .06em}
+.st{display:inline-block;font-family:var(--thai-display);font-weight:500;font-size:28px;padding:8px 24px;border-radius:999px}
+.mascot{display:block}
+.bob{animation:bob 3.2s ease-in-out infinite}
+.bob2{animation:bob 3.2s ease-in-out -1.6s infinite}
+@keyframes bob{50%{transform:translateY(-14px) rotate(-2deg)}}
+.blobnum{display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;border-radius:58% 42% 55% 45%/48% 60% 40% 52%}
+
+/* entrance motion: only on the active slide */
+.slide.active .a{animation:up .75s var(--ease) both;animation-delay:calc(var(--d,0) * 130ms + 150ms)}
+.slide.active .pop{animation:pop .6s var(--ease) both;animation-delay:calc(var(--d,0) * 130ms + 150ms)}
+.slide.active .draw{stroke-dasharray:var(--len,1200);stroke-dashoffset:var(--len,1200);animation:draw 1.4s ease-out forwards;animation-delay:calc(var(--d,0) * 130ms + 200ms)}
+.slide.active .grow{transform-origin:left center;animation:grow .7s ease-out both;animation-delay:calc(var(--d,0) * 160ms + 200ms)}
+.slide.active .spin{animation:spin 18s linear infinite}
+@keyframes up{from{opacity:0;transform:translateY(46px)}}
+@keyframes pop{0%{opacity:0;transform:scale(.4) rotate(-8deg)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* chrome */
+#ui{position:fixed;right:22px;bottom:18px;display:flex;gap:10px;align-items:center;z-index:10}
+#ui button{font-family:var(--thai-display);font-size:15px;border:0;border-radius:999px;padding:9px 16px;background:var(--lime);color:var(--ink);cursor:pointer}
+#ui button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+#count{font-family:var(--display);font-weight:800;font-size:15px;background:#fff;color:var(--ink);border-radius:999px;padding:8px 14px;font-variant-numeric:tabular-nums}
+#bar{position:fixed;left:0;bottom:0;height:6px;background:var(--lime);z-index:10;transition:width .4s ease}
+
+/* specific slides */
+.bg-purple{background:var(--purple);color:#fff}
+.bg-lime{background:var(--lime)} .bg-yellow{background:var(--yellow)} .bg-pink{background:var(--pink)}
+.bg-orange{background:var(--orange);color:#fff} .bg-blue{background:var(--blue);color:#fff} .bg-ink{background:var(--ink);color:#fff}
+.squig{position:absolute}
+.divider{display:flex;align-items:center;gap:90px}
+.divider .blobnum{width:380px;height:380px;font-size:220px;background:var(--ink);color:var(--paper);flex:none}
+.tile{border-radius:36px;padding:40px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:36px}
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:26px}
+.grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.white{background:#fff;border-radius:28px;padding:36px 40px}
+.prompt{background:#fff;border-radius:28px;padding:40px 46px;font-size:31px;line-height:1.7;white-space:pre-wrap}
+.badge{display:inline-block;font-family:var(--thai-display);font-weight:500;font-size:24px;padding:4px 18px;border-radius:999px}
+.b-fan{background:var(--pink);color:var(--ink)} .b-out{background:var(--blue);color:#fff}
+.hl1{background:var(--lime);border-radius:10px;padding:2px 6px}
+.hl2{background:var(--yellow);border-radius:10px;padding:2px 6px}
+.hl3{background:var(--orange);color:#fff;border-radius:10px;padding:2px 6px}
+.hl4{background:var(--pink);border-radius:10px;padding:2px 6px}
+.hl5{background:var(--purple);color:#fff;border-radius:10px;padding:2px 6px}
+.z{border-radius:18px;padding:14px 18px;font-size:24px;line-height:1.3;display:flex;flex-direction:column;justify-content:center}
+.z b{font-family:var(--thai-display);font-weight:600;font-size:28px}
+.swatch{height:210px;border-radius:24px;position:relative;overflow:hidden;margin-bottom:18px}
+@media (prefers-reduced-motion:reduce){
+  .slide.active .a,.slide.active .pop,.slide.active .grow,.bob,.bob2,.slide.active .spin{animation:none}
+  .slide.active .draw{animation:none;stroke-dashoffset:0}
+  .slide{transition:none}
+}
+.mascot{filter:url(#boil)}
+.frame{background:#fff;border:4px solid var(--ink);border-radius:28px}
+.ctl{border:5px solid var(--ink);border-radius:30px;overflow:hidden;display:flex;flex-direction:column}
+.ctl .pic{height:190px;display:flex;align-items:flex-end;justify-content:center}
+.ctl .cap{background:#fff;border-top:5px solid var(--ink);padding:14px 20px}
+.ctl .cap b{font-family:var(--thai-display);font-weight:600;font-size:32px;display:block}
+.ctl .cap span{font-size:24px;color:var(--soft)}
+@media (prefers-reduced-motion:reduce){.mascot{filter:url(#wob)}}
+
+/* v5 motion */
+.slide{isolation:isolate}
+.deco{position:absolute;inset:0;z-index:-1;pointer-events:none}
+.deco span{position:absolute;display:block}
+.slide.active .deco span{animation:drift var(--t,7s) ease-in-out infinite;animation-delay:var(--dl,0s)}
+@keyframes drift{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(var(--dx,14px),var(--dy,-22px)) rotate(var(--dr,40deg))}}
+.slide{transition:none!important}
+.slide.leaving{opacity:1;visibility:visible;z-index:1}
+.slide.active{z-index:2}
+.slide.inR{animation:inR .65s cubic-bezier(.7,0,.25,1) both}.slide.outL{animation:outL .65s cubic-bezier(.7,0,.25,1) both}
+.slide.inL{animation:inL .65s cubic-bezier(.7,0,.25,1) both}.slide.outR{animation:outR .65s cubic-bezier(.7,0,.25,1) both}
+@keyframes inR{from{transform:translateX(100%)}to{transform:none}}@keyframes outL{from{transform:none}to{transform:translateX(-100%)}}
+@keyframes inL{from{transform:translateX(-100%)}to{transform:none}}@keyframes outR{from{transform:none}to{transform:translateX(100%)}}
+.caret::after{content:"";display:inline-block;width:3px;height:1em;background:var(--ink);margin-left:2px;vertical-align:-3px;animation:blink .8s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.spkpic{width:560px;height:660px;background:var(--lime);border:6px solid var(--ink);border-radius:44px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;transform:rotate(-3deg);flex:none}
+.cbtn{display:inline-flex;align-items:center;gap:14px;font-family:var(--thai-display);font-weight:500;font-size:36px;padding:16px 34px;border-radius:999px;border:4px solid var(--ink)}
+.acol{background:#fff;border:5px solid var(--ink);border-radius:34px;overflow:hidden;display:flex;flex-direction:column}
+.acol .hd{display:flex;align-items:center;gap:18px;padding:16px 24px;border-bottom:5px solid var(--ink)}
+.acol .hd .bn{width:84px;height:84px;flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:46px;background:var(--ink);color:var(--paper);border-radius:58% 42% 55% 45%/48% 60% 40% 52%}
+.acol .hd h3{font-size:42px}
+.acol .hd p{font-size:22px}
+.acol .bd{padding:18px 24px;display:flex;flex-direction:column;gap:12px;flex:1}
+.acol .goal{font-family:var(--thai-display);font-weight:500;font-size:24px;line-height:1.35}
+.acol ul{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.acol li{display:grid;grid-template-columns:32px 1fr;gap:10px;font-size:21px;line-height:1.38}
+.acol li::before{content:"✓";width:30px;height:30px;border-radius:50%;background:var(--mint);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;margin-top:2px}
+.acol .hci{background:var(--pink-bg);border-radius:20px;padding:12px 16px;font-size:19px;line-height:1.4}
+.acol .q{background:var(--yellow);border-radius:20px;padding:12px 16px;font-size:20px;line-height:1.4;margin-top:auto}
+.acol b{font-family:var(--thai-display);font-weight:600}
+.pzoom{position:absolute;left:130px;top:300px;width:1660px;height:690px;border-radius:30px;overflow:hidden;background:#EFE8D8;border:5px solid var(--ink)}
+.pzoom .pm{position:absolute;left:0;top:0;transform-origin:0 0;transform:translate(541px,6px) scale(.68)}
+.slide.active .pzoom .pm{animation:zoomui 7s cubic-bezier(.65,0,.3,1) .6s both}
+@keyframes zoomui{0%,12%{transform:translate(541px,6px) scale(.68)}55%,100%{transform:translate(0px,-1030px) scale(1.953)}}
+@media (prefers-reduced-motion:reduce){.slide.inR,.slide.inL,.slide.outL,.slide.outR{animation:none}.slide.leaving{visibility:hidden}.slide.active .deco span{animation:none}.slide.active .pzoom .pm{animation:none;transform:translate(0px,-1030px) scale(1.953)}.caret::after{animation:none}}
+
+.pm{width:850px;height:1200px;background:#FFF8EC;border:4px solid #17142B;border-radius:10px;padding:13px;display:grid;grid-template-rows:auto auto auto auto 1fr auto;gap:8px;font-family:"Anuphan","Mitr",sans-serif;color:#17142B;font-size:12px;line-height:1.4;position:relative;overflow:hidden;box-sizing:border-box}
+.pm *{box-sizing:border-box}
+.pm h3{font-family:"Mitr",sans-serif;font-weight:600;font-size:17px;margin:0 0 2px;line-height:1.15;display:flex;align-items:center;gap:8px}
+.pm .zn{width:28px;height:28px;border-radius:58% 42% 55% 45%/48% 60% 40% 52%;background:#17142B;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:15px;flex:none}
+.pm b{font-weight:600}
+.pm .box{border:3px solid #17142B;border-radius:16px;padding:7px 11px}
+.pm .hd{background:#6B4BF2;color:#fff;border:3px solid #17142B;border-radius:18px;padding:10px 14px;display:grid;grid-template-columns:1fr 96px;gap:14px;align-items:center}
+.pm .hd .t1{font-family:"Mitr",sans-serif;font-weight:600;font-size:40px;line-height:1}
+.pm .hd .t2{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:15px;opacity:.92;margin-top:3px}
+.pm .hd .tag{display:inline-block;background:#C8F04A;color:#17142B;border:3px solid #17142B;border-radius:999px;padding:3px 14px;font-family:"Mitr",sans-serif;font-weight:500;font-size:14px;margin-top:7px;transform:rotate(-1deg)}
+.pm .hd .team{font-size:11px;margin-top:6px;color:#E9E3FF}
+.pm .hd .pic{background:#FFE2F1;border:3px solid #17142B;border-radius:16px;height:100px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.pm .row2{display:grid;grid-template-columns:.85fr 1.5fr;gap:12px}
+.pm .pink{background:#FF8AC6}.pm .pinkbg{background:#FFE2F1}.pm .lime{background:#C8F04A}.pm .blue{background:#3E68FF;color:#fff}.pm .yellow{background:#FFD43B}.pm .orange{background:#FF7A2F;color:#fff}
+.pm .big{font-family:"Bricolage Grotesque","Mitr",sans-serif;font-weight:800;font-size:38px;line-height:1}
+.pm .src{font-size:10.5px;opacity:.8}
+.pm .hmw{background:#fff;border:2.5px solid #17142B;border-radius:12px;padding:5px 9px;margin-top:6px;font-size:11.5px}
+.pm .chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.pm .chip{background:#fff;border:2px solid #17142B;border-radius:999px;padding:0 7px;font-size:10.5px}
+.pm .persona{display:grid;grid-template-columns:50px 1fr;gap:8px;align-items:center;background:#fff;border:2.5px solid #17142B;border-radius:12px;padding:7px 9px}
+.pm .av{width:50px;height:50px;border-radius:50%;border:2.5px solid #17142B;background:#FFD43B;overflow:hidden}
+.pm .ins{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:3px}
+.pm .ins li{display:grid;grid-template-columns:20px 1fr;gap:6px;font-size:10.8px}
+.pm .ins li span{width:20px;height:20px;border-radius:50%;background:#17142B;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:600}
+.pm .proc{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:stretch}
+.pm .step{background:#fff;border:2.5px solid #17142B;border-radius:12px;padding:4px 7px;font-size:10.5px;position:relative}
+.pm .step b{font-family:"Mitr",sans-serif;font-weight:600;font-size:12.5px;display:block}
+.pm .step:not(:last-child)::after{content:"→";position:absolute;right:-12px;top:50%;transform:translateY(-50%);font-weight:800;font-size:16px;z-index:2}
+.pm .sol{display:flex;flex-direction:column}
+.pm .phones{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:start;margin-top:2px}
+.pm .pcol{display:flex;flex-direction:column;align-items:center;gap:6px}
+.pm .ph{width:140px;height:218px;border:4.5px solid #17142B;border-radius:24px;background:#fff;position:relative;overflow:hidden;padding:19px 8px 8px;display:flex;flex-direction:column;gap:4px;font-size:10px;line-height:1.3}
+.pm .ph::before{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:44px;height:8px;border-radius:6px;background:#17142B}
+.pm .ph .sb{display:flex;justify-content:space-between;font-size:9px;opacity:.7}
+.pm .ph .h{font-family:"Mitr",sans-serif;font-weight:600;font-size:13px;line-height:1.2}
+.pm .pill{display:flex;align-items:center;gap:6px;background:#F3F0FF;border-radius:9px;padding:4px 6px}
+.pm .pill i{display:inline-block;width:18px;height:10px;border-radius:6px;border:2px solid #17142B;flex:none}
+.pm .bigbtn{width:74px;height:74px;border-radius:50%;background:#C8F04A;border:4px solid #17142B;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:"Mitr",sans-serif;font-weight:600;font-size:15px;margin:2px auto;line-height:1.1}
+.pm .bigbtn small{font-size:22px}
+.pm .cam{background:#17142B;border-radius:12px;height:84px;position:relative;display:flex;align-items:center;justify-content:center}
+.pm .cam .pk{width:70px;height:46px;background:#fff;border-radius:6px;display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:6px}
+.pm .cam .pk span{background:#FF8AC6;border-radius:50%}
+.pm .cam::before,.pm .cam::after{content:"";position:absolute;width:20px;height:20px;border:3px solid #C8F04A}
+.pm .cam::before{top:10px;left:10px;border-right:0;border-bottom:0}.pm .cam::after{bottom:10px;right:10px;border-left:0;border-top:0}
+.pm .res{border:2px solid #17142B;border-radius:9px;padding:5px 7px}
+.pm .btn{background:#17142B;color:#fff;border-radius:999px;text-align:center;padding:5px;font-family:"Mitr",sans-serif;font-size:11px}
+.pm .btn.l{background:#C8F04A;color:#17142B;border:2px solid #17142B}
+.pm .voice{background:#6B4BF2;color:#fff}
+.pm .voice .vav{width:42px;height:42px;border-radius:50%;background:#FFD43B;border:3px solid #fff;margin:2px auto 0;display:flex;align-items:center;justify-content:center;color:#17142B;font-family:"Mitr",sans-serif;font-weight:600;font-size:16px}
+.pm .wave{display:flex;align-items:center;justify-content:center;gap:3px;height:22px}
+.pm .wave i{display:block;width:4px;border-radius:3px;background:#C8F04A}
+.pm .tl{display:grid;gap:5px}
+.pm .tl div{display:flex;justify-content:space-between;align-items:center;border:2px solid #17142B;border-radius:9px;padding:3px 6px;font-size:9.5px;white-space:nowrap}
+.pm .ok{background:#2BC48A;color:#fff;border-radius:999px;padding:0 6px;font-size:9.5px}
+.pm .wait{background:#FFD43B;border-radius:999px;padding:0 6px;font-size:9.5px}
+.pm .co{background:#fff;border:2.5px solid #17142B;border-radius:12px;padding:4px 7px;font-size:10.3px;text-align:center;width:100%}
+.pm .co b{display:block;font-family:"Mitr",sans-serif;font-size:11.5px}
+.pm .co .from{display:inline-block;background:#FF8AC6;border-radius:999px;padding:0 7px;font-size:10px;margin-bottom:2px}
+.pm .row5{display:grid;grid-template-columns:1.5fr 1fr;gap:12px}
+.pm .mets{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:5px 0}
+.pm .met{background:#fff;color:#17142B;border:2.5px solid #17142B;border-radius:12px;padding:6px 8px}
+.pm .met .v{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:19px;line-height:1.1}
+.pm .met .v s{opacity:.45;font-size:15px}
+.pm .bars{display:grid;gap:3px;margin-top:4px}
+.pm .bars div{height:7px;border-radius:4px;border:1.5px solid #17142B}
+.pm .ba{display:grid;gap:3px;font-size:11px}
+.pm .ba div{background:rgba(255,255,255,.14);border-radius:9px;padding:3px 8px}
+.pm .side{display:grid;gap:10px;grid-template-rows:auto 1fr}
+.pm .try{display:grid;grid-template-columns:66px 1fr;gap:10px;align-items:center}
+.pm .vote{display:grid;gap:3px;margin-top:4px}
+.pm .vote div{background:#fff;color:#17142B;border-radius:9px;padding:1px 7px;font-size:10px;display:flex;justify-content:space-between;align-items:center}
+.pm .vote i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:2px}
+.pm .ft{background:#17142B;color:#E8E4F5;border-radius:12px;padding:7px 12px;font-size:9.8px;display:grid;grid-template-columns:1.1fr 1fr 1.2fr;gap:12px}
+.pm .ft b{color:#C8F04A}
+.pm .demo{position:absolute;right:-50px;top:26px;transform:rotate(30deg);background:#FFD43B;border:3px solid #17142B;padding:4px 56px;font-family:"Mitr",sans-serif;font-weight:600;font-size:13px;z-index:3}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="wob" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="2.4"/></filter><filter id="boil" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="1"><animate attributeName="seed" values="1;4;7;10" dur=".56s" calcMode="discrete" repeatCount="indefinite"/></feTurbulence><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter><symbol id="c-fan" viewBox="0 0 200 240"><g stroke="#17142B" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"><path d="M174.0 104.0A17.1 17.1 0 0 1 169.7 133.4A19.4 19.4 0 0 1 150.2 156.8A20.7 20.7 0 0 1 123.7 173.2A19.9 19.9 0 0 1 92.0 176.5A20.2 20.2 0 0 1 63.7 163.6A18.9 18.9 0 0 1 41.5 144.3A17.5 17.5 0 0 1 23.2 119.5A19.8 19.8 0 0 1 27.4 89.4A18.6 18.6 0 0 1 40.1 62.8A18.7 18.7 0 0 1 60.1 38.6A18.3 18.3 0 0 1 92.1 32.6A21.4 21.4 0 0 1 124.3 33.2A19.5 19.5 0 0 1 150.7 50.6A19.9 19.9 0 0 1 170.4 74.3A20.0 20.0 0 0 1 174.0 104.0Z" fill="#FF5FA8"/><path d="M22 246C26 204 58 196 100 196C142 196 174 204 178 246Z" fill="#6B4BF2"/><path d="M62.0 215.0C62.2 215.0 63.5 219.7 63.9 220.1C64.3 220.5 69.0 221.8 69.0 222.0C69.0 222.2 64.3 223.5 63.9 223.9C63.5 224.3 62.2 229.0 62.0 229.0C61.8 229.0 60.5 224.3 60.1 223.9C59.7 223.5 55.0 222.2 55.0 222.0C55.0 221.8 59.7 220.5 60.1 220.1C60.5 219.7 61.8 215.0 62.0 215.0Z" fill="#FFD43B" stroke-width="3.5"/><path d="M132.0 224.0C132.2 224.0 133.3 228.0 133.6 228.4C134.0 228.7 138.0 229.8 138.0 230.0C138.0 230.2 134.0 231.3 133.6 231.6C133.3 232.0 132.2 236.0 132.0 236.0C131.8 236.0 130.7 232.0 130.4 231.6C130.0 231.3 126.0 230.2 126.0 230.0C126.0 229.8 130.0 228.7 130.4 228.4C130.7 228.0 131.8 224.0 132.0 224.0Z" fill="#FFD43B" stroke-width="3.5"/><path d="M150.0 203.0C150.2 203.0 151.1 206.4 151.3 206.7C151.6 206.9 155.0 207.8 155.0 208.0C155.0 208.2 151.6 209.1 151.3 209.3C151.1 209.6 150.2 213.0 150.0 213.0C149.8 213.0 148.9 209.6 148.7 209.3C148.4 209.1 145.0 208.2 145.0 208.0C145.0 207.8 148.4 206.9 148.7 206.7C148.9 206.4 149.8 203.0 150.0 203.0Z" fill="#FFD43B" stroke-width="3.5"/><path d="M89 166L88 198H112L111 166" fill="#FFD3B5"/><path d="M95.4 77.9C104.7 76.8 116.3 78.6 124.5 82.8C132.7 87.1 140.6 95.1 144.6 103.3C148.6 111.4 150.4 123.0 148.4 132.0C146.3 140.9 139.5 150.8 132.3 157.1C125.0 163.5 114.1 169.6 105.1 170.1C96.0 170.5 85.7 164.5 77.7 159.6C69.8 154.8 61.6 148.5 57.2 140.7C52.9 132.9 49.8 121.4 51.7 112.8C53.5 104.2 61.0 95.0 68.3 89.2C75.6 83.3 86.0 78.9 95.4 77.9Z" fill="#FFD3B5"/><path d="M47.7 81.1A6.4 6.4 0 0 1 49.0 69.9A7.1 7.1 0 0 1 54.5 58.8A10.7 10.7 0 0 1 70.6 52.0A12.0 12.0 0 0 1 87.9 46.5A11.4 11.4 0 0 1 107.9 47.0A10.6 10.6 0 0 1 125.3 52.0A10.9 10.9 0 0 1 140.9 59.0A8.3 8.3 0 0 1 146.5 69.9A7.2 7.2 0 0 1 148.9 81.2L98.0 76.0Z" fill="#FF5FA8" stroke="none"/><path d="M47.7 81.1A6.4 6.4 0 0 1 49.0 69.9A7.1 7.1 0 0 1 54.5 58.8A10.7 10.7 0 0 1 70.6 52.0A12.0 12.0 0 0 1 87.9 46.5A11.4 11.4 0 0 1 107.9 47.0A10.6 10.6 0 0 1 125.3 52.0A10.9 10.9 0 0 1 140.9 59.0A8.3 8.3 0 0 1 146.5 69.9A7.2 7.2 0 0 1 148.9 81.2" fill="none"/><path d="M80.0 100.4C83.8 100.3 89.3 102.7 91.8 105.6C94.4 108.5 95.5 114.0 95.3 118.0C95.1 122.0 93.4 126.5 90.8 129.4C88.3 132.3 83.7 135.2 80.0 135.4C76.3 135.5 71.1 133.1 68.4 130.2C65.7 127.3 63.6 122.0 63.7 118.0C63.8 114.0 66.2 109.3 68.9 106.3C71.6 103.4 76.2 100.6 80.0 100.4Z" fill="#fff"/><polygon points="81.4,109.9 83.7,115.6 89.8,116.0 85.1,119.9 86.6,125.9 81.4,122.6 76.2,125.9 77.8,119.9 73.0,116.0 79.2,115.6" fill="#FFD43B" stroke-width="3"/><path d="M118.0 96.6C122.0 96.8 126.7 99.0 129.5 101.9C132.3 104.8 134.8 109.9 134.8 114.0C134.8 118.1 132.4 123.3 129.6 126.2C126.8 129.0 121.9 131.0 118.0 131.1C114.1 131.1 109.0 129.3 106.1 126.5C103.1 123.7 100.4 118.2 100.3 114.0C100.2 109.8 102.7 103.9 105.6 101.0C108.6 98.1 114.0 96.5 118.0 96.6Z" fill="#fff"/><polygon points="119.5,105.4 121.9,111.5 128.5,111.9 123.4,116.0 125.0,122.4 119.5,118.8 114.0,122.4 115.6,116.0 110.6,111.9 117.1,111.5" fill="#FFD43B" stroke-width="3"/><path d="M86 142Q100 166 116 140Z" fill="#17142B"/><path d="M93 151Q101 146 108 152Q102 160 94 155Z" fill="#FF7A9E" stroke="none"/><path d="M54.0 145.0L60.0 135.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M61.0 145.0L67.0 135.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M68.0 145.0L74.0 135.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M124.0 141.0L130.0 131.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M131.0 141.0L137.0 131.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M138.0 141.0L144.0 131.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M146.0 214.0C148.7 211.0 159.0 203.3 162.0 196.0C165.0 188.7 163.7 174.3 164.0 170.0" fill="none" stroke="#17142B" stroke-width="21.9" stroke-linecap="round"/><path d="M146.0 214.0C148.7 211.0 159.0 203.3 162.0 196.0C165.0 188.7 163.7 174.3 164.0 170.0" fill="none" stroke="#FFD3B5" stroke-width="12" stroke-linecap="round"/><path d="M164 172L174 100" fill="none" stroke-width="7"/><path d="M175.0 69.1C177.7 69.1 181.0 70.5 183.1 72.5C185.2 74.4 186.8 77.8 187.7 81.0C188.7 84.1 189.7 88.5 188.9 91.5C188.1 94.5 185.1 97.0 182.7 98.9C180.4 100.9 177.7 102.8 175.0 103.0C172.3 103.3 168.5 102.4 166.4 100.4C164.3 98.4 163.2 94.3 162.4 91.0C161.6 87.7 160.9 83.9 161.6 80.7C162.3 77.6 164.4 74.0 166.7 72.1C168.9 70.1 172.3 69.0 175.0 69.1Z" fill="#C8F04A"/><path d="M150.0 70.0l3.1 -8.5" fill="none" stroke-width="4"/><path d="M158.5 73.1l3.1 -8.5" fill="none" stroke-width="4"/><path d="M166.9 76.2l3.1 -8.5" fill="none" stroke-width="4"/><path d="M24 52c-8-8-4-18 4-16 4 1 4 5 4 5s1-4 5-4c8 0 9 10-1 18l-6 5z" fill="#FF5F8F" stroke-width="4"/></g></symbol><symbol id="c-out" viewBox="0 0 200 240"><g stroke="#17142B" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"><path d="M100.0 173.5C115.0 173.2 134.7 176.9 145.8 182.8C156.9 188.6 163.1 199.8 166.6 208.5C170.1 217.3 170.4 226.8 166.9 235.5C163.3 244.2 156.4 255.1 145.2 260.7C134.1 266.3 114.9 269.4 100.0 269.3C85.1 269.2 67.1 265.5 55.6 260.0C44.2 254.4 35.7 244.6 31.2 235.9C26.8 227.2 24.6 216.2 28.7 207.6C32.8 199.0 44.1 190.0 55.9 184.3C67.8 178.6 85.0 173.7 100.0 173.5Z" fill="#3DBB6B"/><path d="M70.0 69.8C75.2 69.7 81.7 71.1 86.0 74.0C90.2 77.0 93.6 82.7 95.3 87.8C97.0 92.9 97.5 99.4 96.0 104.4C94.5 109.5 90.4 115.3 86.1 118.2C81.8 121.0 75.2 121.9 70.0 121.6C64.8 121.3 59.5 119.4 55.1 116.6C50.6 113.7 44.9 109.5 43.3 104.7C41.6 99.9 43.2 92.9 45.1 87.9C47.0 82.9 50.5 77.9 54.6 74.9C58.8 71.8 64.8 70.0 70.0 69.8Z" fill="#3DBB6B"/><path d="M134.0 59.0C140.0 59.1 146.9 61.8 151.9 65.3C156.9 68.9 162.2 74.5 164.1 80.2C165.9 85.9 165.2 93.8 163.2 99.5C161.1 105.2 156.7 110.9 151.8 114.5C147.0 118.2 140.3 121.2 134.0 121.6C127.7 122.1 119.5 120.7 114.2 117.2C109.0 113.6 104.4 106.5 102.5 100.2C100.5 94.0 100.4 85.7 102.6 79.8C104.8 73.9 110.6 68.4 115.8 65.0C121.1 61.5 128.0 59.0 134.0 59.0Z" fill="#3DBB6B"/><path d="M103.6 94.4C117.0 95.3 133.1 100.1 143.1 106.9C153.1 113.7 160.8 125.3 163.6 135.0C166.4 144.7 164.8 156.6 159.8 165.2C154.8 173.8 144.3 181.2 133.7 186.5C123.2 191.7 109.0 197.3 96.4 196.9C83.9 196.4 69.0 190.1 58.6 183.5C48.3 176.9 37.5 166.9 34.3 157.4C31.1 147.9 34.6 135.8 39.4 126.5C44.2 117.2 52.3 106.9 63.0 101.5C73.7 96.2 90.2 93.5 103.6 94.4Z" fill="#3DBB6B"/><path d="M58 96C62 120 78 124 84 118" fill="#3DBB6B" stroke="none"/><path d="M70.0 77.9C74.0 77.9 79.4 80.1 82.3 83.1C85.2 86.1 87.5 91.6 87.5 96.0C87.5 100.4 85.5 106.1 82.6 109.2C79.6 112.2 74.2 114.3 70.0 114.3C65.8 114.3 60.2 112.2 57.5 109.2C54.8 106.1 53.7 100.3 53.8 96.0C53.9 91.7 55.3 86.4 58.0 83.4C60.7 80.4 66.0 78.0 70.0 77.9Z" fill="#fff"/><circle cx="74.6" cy="92.2" r="8.2" fill="#17142B" stroke="none"/><circle cx="71.7" cy="88.9" r="2.4" fill="#fff" stroke="none"/><path d="M134.0 68.6C139.0 68.4 146.2 70.1 149.5 73.7C152.9 77.3 154.3 84.6 154.2 90.0C154.2 95.4 152.5 102.4 149.2 105.9C145.8 109.4 138.9 111.3 134.0 111.1C129.1 111.0 123.2 108.7 119.5 105.2C115.9 101.7 111.9 95.1 112.0 90.0C112.0 84.9 115.9 78.4 119.6 74.9C123.3 71.3 129.0 68.7 134.0 68.6Z" fill="#fff"/><circle cx="140.6" cy="86.2" r="8.8" fill="#17142B" stroke="none"/><circle cx="137.5" cy="82.7" r="2.6" fill="#fff" stroke="none"/><path d="M70.0 164.0C71.7 163.0 76.7 157.7 80.0 158.0C83.3 158.3 86.7 166.0 90.0 166.0C93.3 166.0 96.7 158.0 100.0 158.0C103.3 158.0 106.7 166.0 110.0 166.0C113.3 166.0 116.7 158.3 120.0 158.0C123.3 157.7 128.3 163.0 130.0 164.0" fill="none" stroke-width="5.5"/><ellipse cx="56.0" cy="152.0" rx="9" ry="6" fill="#FF8FB1" stroke="none" opacity=".85"/><ellipse cx="146.0" cy="150.0" rx="9" ry="6" fill="#FF8FB1" stroke="none" opacity=".85"/><path d="M140 44c-2-14 18-20 26-8 6 10-6 14-6 22" fill="none" stroke="#FFD43B" stroke-width="13"/><path d="M140 44c-2-14 18-20 26-8 6 10-6 14-6 22" fill="none" stroke="#17142B" stroke-width="4"/><circle cx="160" cy="76" r="5" fill="#17142B" stroke="none"/><path d="M168 128c6 8 6 16 0 18c-6-2-6-10 0-18z" fill="#9FD8FF" stroke-width="3.5"/><path d="M46.0 214.0C43.3 209.3 31.0 196.7 30.0 186.0C29.0 175.3 35.7 157.7 40.0 150.0C44.3 142.3 53.3 141.7 56.0 140.0" fill="none" stroke="#17142B" stroke-width="22.9" stroke-linecap="round"/><path d="M46.0 214.0C43.3 209.3 31.0 196.7 30.0 186.0C29.0 175.3 35.7 157.7 40.0 150.0C44.3 142.3 53.3 141.7 56.0 140.0" fill="none" stroke="#3DBB6B" stroke-width="13" stroke-linecap="round"/><path d="M60.0 128.0C61.8 128.1 63.8 128.6 65.3 129.5C66.8 130.4 68.5 131.9 69.0 133.4C69.5 134.9 69.1 136.9 68.5 138.5C67.9 140.0 66.7 141.5 65.3 142.5C63.9 143.4 61.7 144.1 60.0 144.1C58.3 144.0 56.3 143.2 54.9 142.2C53.5 141.3 52.0 139.9 51.4 138.5C50.8 137.0 50.8 135.0 51.3 133.5C51.8 132.0 53.1 130.2 54.5 129.3C56.0 128.4 58.2 128.0 60.0 128.0Z" fill="#3DBB6B"/><path d="M26.0 120.0l-9.4 -3.4" fill="none" stroke-width="4"/><path d="M28.7 112.5l-9.4 -3.4" fill="none" stroke-width="4"/></g></symbol><symbol id="c-pres" viewBox="0 0 200 240"><g stroke="#17142B" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"><path d="M22 246C26 202 58 194 100 194C142 194 174 202 178 246Z" fill="#FF7A2F"/><path d="M30 226H170M26 240H174" stroke="#FFD43B" stroke-width="7" fill="none"/><path d="M89 164L88 196H112L111 164" fill="#B97A55"/><path d="M93.8 76.3C102.7 75.5 113.7 77.4 121.4 82.2C129.1 87.0 137.1 96.4 140.2 105.1C143.3 113.8 142.4 125.7 140.0 134.6C137.7 143.4 132.3 152.2 126.0 158.2C119.7 164.3 110.5 170.2 102.1 171.1C93.7 172.0 83.5 168.5 75.7 163.9C67.8 159.2 58.9 151.7 55.1 143.2C51.4 134.7 50.9 122.0 53.1 112.7C55.2 103.4 61.1 93.2 67.9 87.2C74.7 81.1 84.9 77.2 93.8 76.3Z" fill="#B97A55"/><path d="M50.0 116.0 L42.0 82.0 L62.0 92.0 L60.0 50.0 L80.0 76.0 L92.0 30.0 L104.0 70.0 L128.0 36.0 L128.0 76.0 L154.0 58.0 L146.0 96.0 L160.0 104.0 L146.0 116.0Q100 88 50 116Z" fill="#3E68FF"/><path d="M82.0 105.7C85.3 105.6 89.7 107.0 92.1 109.4C94.5 111.8 96.2 116.4 96.3 120.0C96.3 123.6 94.6 128.4 92.2 130.8C89.9 133.1 85.3 134.3 82.0 134.2C78.7 134.1 74.6 132.5 72.4 130.1C70.1 127.7 68.5 123.4 68.5 120.0C68.5 116.6 70.1 112.3 72.4 109.9C74.6 107.5 78.7 105.7 82.0 105.7Z" fill="#fff"/><circle cx="87.0" cy="123.2" r="6.7" fill="#17142B" stroke="none"/><circle cx="84.7" cy="120.5" r="2.0" fill="#fff" stroke="none"/><path d="M114.0 102.9C117.6 102.9 122.3 104.1 124.8 106.6C127.4 109.2 129.2 114.2 129.2 118.0C129.3 121.8 127.6 127.1 125.1 129.6C122.5 132.2 117.6 133.5 114.0 133.4C110.4 133.3 106.2 131.4 103.7 128.9C101.1 126.3 98.7 121.7 98.6 118.0C98.6 114.3 100.7 109.2 103.2 106.7C105.8 104.2 110.4 102.9 114.0 102.9Z" fill="#fff"/><circle cx="119.4" cy="121.4" r="7.2" fill="#17142B" stroke="none"/><circle cx="116.9" cy="118.5" r="2.2" fill="#fff" stroke="none"/><path d="M70.0 100.0C71.7 99.0 76.3 94.3 80.0 94.0C83.7 93.7 90.0 97.3 92.0 98.0" fill="none" stroke-width="5.5"/><path d="M106.0 96.0C108.0 95.0 114.3 90.0 118.0 90.0C121.7 90.0 126.3 95.0 128.0 96.0" fill="none" stroke-width="5.5"/><path d="M82 146Q98 182 120 144Q100 150 82 146Z" fill="#17142B"/><path d="M86 148Q100 152 116 147L115 153Q100 157 87 154Z" fill="#fff" stroke="none"/><path d="M94 166Q102 160 110 165Q104 172 96 170Z" fill="#FF7A9E" stroke="none"/><path d="M52.0 147.0L58.0 137.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M59.0 147.0L65.0 137.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M66.0 147.0L72.0 137.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M124.0 145.0L130.0 135.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M131.0 145.0L137.0 135.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M138.0 145.0L144.0 135.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M156.0 222.0C158.7 217.0 171.3 201.3 172.0 192.0C172.7 182.7 162.0 170.3 160.0 166.0" fill="none" stroke="#17142B" stroke-width="21.9" stroke-linecap="round"/><path d="M156.0 222.0C158.7 217.0 171.3 201.3 172.0 192.0C172.7 182.7 162.0 170.3 160.0 166.0" fill="none" stroke="#B97A55" stroke-width="12" stroke-linecap="round"/><path d="M156 170L140 156" stroke-width="9" fill="none"/><path d="M134.0 137.3C136.4 137.5 138.7 139.4 140.6 140.9C142.6 142.3 145.0 144.1 145.7 146.2C146.5 148.3 145.7 151.2 144.9 153.6C144.2 155.9 143.3 159.0 141.5 160.3C139.6 161.6 136.5 161.3 134.0 161.3C131.5 161.3 128.6 161.4 126.6 160.2C124.7 158.9 123.1 156.1 122.3 153.8C121.6 151.5 121.4 148.5 122.1 146.1C122.8 143.8 124.5 141.2 126.5 139.7C128.5 138.2 131.6 137.1 134.0 137.3Z" fill="#5A5470"/><path d="M128 146l6 4M131 140l6 4" stroke="#fff" stroke-width="2.5" fill="none"/><path d="M136 122q8-8 2-18M146 128q14-10 4-28" fill="none" stroke-width="4"/></g></symbol><symbol id="c-hci" viewBox="0 0 200 240"><g stroke="#17142B" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"><path d="M22 246C26 204 58 196 100 196C142 196 174 204 178 246Z" fill="#6B4BF2"/><path d="M84 196L100 226L116 196" fill="#fff"/><path d="M100 210l-14-8v18zM100 210l14-8v18z" fill="#FF4B3E" stroke-width="4"/><circle cx="100" cy="210" r="4" fill="#FF4B3E" stroke-width="3"/><path d="M89 168L88 198H112L111 168" fill="#F2B08A"/><path d="M73.4 118.0A17.1 17.1 0 0 1 65.2 142.7A11.4 11.4 0 0 1 46.9 142.6A16.2 16.2 0 0 1 38.0 118.0A14.9 14.9 0 0 1 47.3 94.4A10.1 10.1 0 0 1 65.3 93.0A15.9 15.9 0 0 1 73.4 118.0Z" fill="#fff"/><path d="M164.8 114.0A16.3 16.3 0 0 1 154.7 137.4A10.4 10.4 0 0 1 137.4 137.1A16.9 16.9 0 0 1 127.1 114.0A15.0 15.0 0 0 1 137.3 90.5A11.8 11.8 0 0 1 154.7 90.7A15.2 15.2 0 0 1 164.8 114.0Z" fill="#fff"/><path d="M103.1 61.1C112.3 61.1 123.7 66.5 131.0 73.7C138.2 80.9 145.1 93.6 146.7 104.3C148.3 114.9 144.3 127.5 140.7 137.4C137.1 147.4 132.3 158.2 125.1 163.9C117.8 169.6 106.4 172.0 97.3 171.5C88.2 170.9 77.3 167.1 70.7 160.7C64.0 154.4 59.4 143.1 57.4 133.1C55.5 123.2 55.8 111.0 58.8 101.1C61.8 91.2 68.2 80.2 75.5 73.5C82.9 66.8 93.9 61.0 103.1 61.1Z" fill="#F2B08A"/><path d="M84.0 82.0C86.7 81.3 95.0 77.7 100.0 78.0C105.0 78.3 111.7 83.0 114.0 84.0" fill="none" stroke-width="3.5"/><path d="M88.0 92.0C90.3 91.5 98.0 88.8 102.0 89.0C106.0 89.2 110.3 92.3 112.0 93.0" fill="none" stroke-width="3.5"/><path d="M80.0 103.6C83.4 103.6 87.8 104.6 90.4 106.5C93.0 108.5 94.4 112.1 95.6 115.2C96.7 118.4 98.1 122.4 97.1 125.2C96.1 128.1 92.5 130.6 89.6 132.5C86.8 134.3 83.2 136.4 80.0 136.3C76.8 136.3 73.3 134.2 70.5 132.3C67.7 130.4 64.3 127.9 63.3 125.1C62.3 122.3 63.4 118.3 64.5 115.3C65.6 112.2 67.2 108.7 69.8 106.7C72.3 104.8 76.6 103.6 80.0 103.6Z" fill="#fff" stroke-width="6"/><path d="M120.0 102.2C123.4 102.1 127.7 102.6 130.5 104.4C133.3 106.2 136.0 109.8 136.8 112.9C137.7 115.9 136.7 119.7 135.6 122.8C134.5 125.9 133.0 129.6 130.4 131.5C127.8 133.4 123.3 134.5 120.0 134.3C116.7 134.0 113.4 132.1 110.6 130.2C107.7 128.4 104.0 126.1 103.0 123.2C101.9 120.4 103.1 116.2 104.3 113.2C105.5 110.2 107.6 107.2 110.2 105.4C112.9 103.5 116.6 102.4 120.0 102.2Z" fill="#fff" stroke-width="6"/><path d="M97 119h6" stroke-width="5" fill="none"/><circle cx="84" cy="123" r="5.5" fill="#17142B" stroke="none"/><circle cx="124" cy="121" r="5.5" fill="#17142B" stroke="none"/><path d="M94.3 96.0A8.6 8.6 0 0 1 80.0 100.9A9.4 9.4 0 0 1 66.4 96.0A9.5 9.5 0 0 1 80.0 90.9A8.6 8.6 0 0 1 94.3 96.0Z" fill="#fff"/><path d="M135.1 93.0A8.7 8.7 0 0 1 121.0 97.9A8.4 8.4 0 0 1 107.7 93.0A8.7 8.7 0 0 1 121.0 87.9A9.5 9.5 0 0 1 135.1 93.0Z" fill="#fff"/><path d="M134.5 158.0A8.3 8.3 0 0 1 126.6 169.8A14.4 14.4 0 0 1 106.2 176.5A14.2 14.2 0 0 1 83.5 173.1A9.5 9.5 0 0 1 69.4 163.9A8.4 8.4 0 0 1 67.0 151.6A11.7 11.7 0 0 1 83.3 142.7A12.9 12.9 0 0 1 105.8 140.5A14.4 14.4 0 0 1 126.9 146.1A9.3 9.3 0 0 1 134.5 158.0Z" fill="#fff"/><path d="M100.0 129.5C102.3 129.6 104.8 130.3 106.7 131.5C108.7 132.7 110.8 134.6 111.5 136.6C112.3 138.5 111.8 141.3 111.0 143.3C110.2 145.3 108.6 147.2 106.7 148.5C104.9 149.8 102.3 150.9 100.0 151.0C97.7 151.0 94.9 150.1 93.0 148.8C91.2 147.5 89.7 145.3 89.0 143.3C88.3 141.3 88.1 138.7 88.7 136.6C89.3 134.6 90.8 131.9 92.7 130.7C94.5 129.5 97.7 129.4 100.0 129.5Z" fill="#E58F6A"/><ellipse cx="100" cy="176" rx="6" ry="5" fill="#17142B"/><g transform="rotate(-14 100 60)"><path d="M48 60L100 40L152 60L100 80Z" fill="#17142B"/><path d="M74 70V84Q100 96 126 84V70" fill="#17142B"/></g><path d="M146 58Q160 80 152 100" fill="none" stroke-width="3.5"/><path d="M159.0 104.0A5.9 5.9 0 0 1 154.1 112.4A5.2 5.2 0 0 1 146.1 109.5A7.2 7.2 0 0 1 146.5 98.8A4.8 4.8 0 0 1 154.2 95.4A6.0 6.0 0 0 1 159.0 104.0Z" fill="#FFD43B"/></g></symbol><symbol id="c-ux" viewBox="0 0 200 240"><g stroke="#17142B" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"><path d="M84.0 214.0C83.7 218.3 82.3 235.7 82.0 240.0" fill="none" stroke="#17142B" stroke-width="18.9" stroke-linecap="round"/><path d="M84.0 214.0C83.7 218.3 82.3 235.7 82.0 240.0" fill="none" stroke="#FFD43B" stroke-width="9" stroke-linecap="round"/><path d="M116.0 214.0C116.7 218.3 119.3 235.7 120.0 240.0" fill="none" stroke="#17142B" stroke-width="18.9" stroke-linecap="round"/><path d="M116.0 214.0C116.7 218.3 119.3 235.7 120.0 240.0" fill="none" stroke="#FFD43B" stroke-width="9" stroke-linecap="round"/><path d="M96.1 111.6C108.1 111.4 121.3 113.7 131.4 119.4C141.6 125.1 151.8 135.1 156.8 145.7C161.8 156.2 164.6 171.7 161.4 182.7C158.3 193.7 147.6 204.8 138.0 211.9C128.4 219.0 115.6 224.2 104.0 225.1C92.3 226.0 78.6 223.0 68.1 217.3C57.5 211.7 45.0 201.8 40.7 191.3C36.4 180.8 39.4 166.0 42.4 154.2C45.5 142.5 50.2 127.9 59.1 120.8C68.1 113.7 84.0 111.9 96.1 111.6Z" fill="#8E6CFF"/><path d="M104.0 157.5C110.9 157.7 118.9 159.3 124.4 162.6C130.0 165.8 134.9 171.4 137.4 176.9C140.0 182.5 141.9 190.2 139.9 195.7C137.8 201.3 131.1 206.7 125.2 210.3C119.2 213.8 110.9 217.0 104.0 216.8C97.1 216.6 89.6 212.7 83.9 209.1C78.1 205.5 72.3 200.7 69.7 195.3C67.1 189.8 66.2 182.0 68.4 176.3C70.5 170.7 76.8 164.8 82.8 161.7C88.7 158.5 97.1 157.4 104.0 157.5Z" fill="#E9E2FF"/><path d="M92.0 182.0C94.0 183.0 100.0 188.0 104.0 188.0C108.0 188.0 114.0 183.0 116.0 182.0" fill="none" stroke-width="3.5"/><path d="M94.0 196.0C95.7 196.7 100.7 200.0 104.0 200.0C107.3 200.0 112.3 196.7 114.0 196.0" fill="none" stroke-width="3.5"/><path d="M40 160C18 150 14 120 30 110C40 130 50 140 62 146Z" fill="#8E6CFF"/><path d="M14.0 104.0l-5.0 -8.7" fill="none" stroke-width="4"/><path d="M20.9 100.0l-5.0 -8.7" fill="none" stroke-width="4"/><g transform="translate(4 20) rotate(-6 100 80)"><path d="M50 86C52 62 98 54 136 66C156 72 150 92 134 92C106 96 72 96 50 86Z" fill="#17142B"/><path d="M98 60q2-12 10-12" fill="none" stroke-width="5"/></g><path d="M84.0 107.0C88.2 106.9 93.8 109.3 96.9 112.5C100.0 115.6 102.6 121.6 102.6 126.0C102.5 130.4 99.5 135.9 96.4 139.1C93.3 142.3 88.3 145.1 84.0 145.2C79.7 145.3 73.9 143.1 70.8 139.9C67.7 136.7 65.1 130.5 65.3 126.0C65.4 121.5 68.5 116.2 71.7 113.1C74.8 109.9 79.8 107.1 84.0 107.0Z" fill="#fff"/><circle cx="89.7" cy="130.9" r="8.6" fill="#17142B" stroke="none"/><circle cx="86.6" cy="127.4" r="2.6" fill="#fff" stroke="none"/><path d="M67.2 119.5A18.0 18.0 0 0 1 100.8 119.5Q84.0 122.8 67.2 119.5Z" fill="#8E6CFF"/><path d="M120.0 100.9C124.7 100.9 130.8 103.5 134.3 107.0C137.7 110.5 140.6 116.9 140.7 122.0C140.8 127.1 138.2 133.8 134.7 137.4C131.3 141.1 124.8 143.9 120.0 143.8C115.2 143.7 109.5 140.3 106.0 136.6C102.6 133.0 99.1 126.9 99.1 122.0C99.1 117.1 102.5 110.8 106.0 107.3C109.4 103.8 115.3 101.0 120.0 100.9Z" fill="#fff"/><circle cx="126.3" cy="127.4" r="9.6" fill="#17142B" stroke="none"/><circle cx="122.9" cy="123.6" r="2.9" fill="#fff" stroke="none"/><path d="M101.3 114.8A20.0 20.0 0 0 1 138.7 114.8Q120.0 118.4 101.3 114.8Z" fill="#8E6CFF"/><path d="M98 140Q120 136 142 150Q122 162 100 156Z" fill="#FFD43B"/><path d="M100 149L140 150" fill="none" stroke-width="3.5"/><g transform="rotate(-8 150 148)"><rect x="128" y="141" width="54" height="13" rx="3" fill="#FFD43B" stroke-width="4"/><path d="M182 141l14 6.5-14 6.5z" fill="#FFD3B5" stroke-width="4"/><rect x="120" y="141" width="10" height="13" rx="2" fill="#FF8AC6" stroke-width="4"/></g><g transform="rotate(10 160 44)"><rect x="146" y="28" width="30" height="30" rx="3" fill="#FF8AC6" stroke-width="4"/><path d="M152 38h18M152 46h12" stroke-width="3" fill="none"/></g></g></symbol><symbol id="c-biz" viewBox="0 0 200 240"><g stroke="#17142B" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"><path d="M22 246C26 204 58 196 100 196C142 196 174 204 178 246Z" fill="#17142B"/><path d="M84 196L100 230L116 196Z" fill="#fff"/><path d="M100 202l-8 10 8 24 8-24z" fill="#FF7A2F" stroke-width="4"/><circle cx="98" cy="216" r="2.2" fill="#FFD43B" stroke="none"/><circle cx="102" cy="226" r="2.2" fill="#FFD43B" stroke="none"/><path d="M58.2 82.5C61.4 83.8 64.2 88.2 65.4 93.4C66.6 98.6 66.4 106.4 65.3 113.8C64.2 121.2 62.3 131.1 59.1 137.9C55.9 144.7 50.4 150.9 46.1 154.4C41.8 157.9 36.7 160.0 33.4 158.9C30.0 157.8 27.0 153.1 25.8 147.7C24.6 142.3 24.9 133.9 26.2 126.4C27.4 118.8 29.9 109.3 33.2 102.5C36.5 95.7 41.8 89.0 45.9 85.6C50.1 82.3 54.9 81.2 58.2 82.5Z" fill="#2347C8"/><path d="M141.4 81.3C144.6 80.3 149.9 84.2 154.1 87.9C158.2 91.6 162.9 97.0 166.1 103.4C169.4 109.8 172.0 118.8 173.4 126.3C174.9 133.7 175.8 142.9 174.6 148.3C173.5 153.7 170.1 157.6 166.6 158.8C163.2 160.1 158.0 159.4 153.9 155.6C149.9 151.9 145.5 143.2 142.2 136.2C138.8 129.2 135.3 120.6 134.1 113.6C132.9 106.6 133.8 99.4 135.1 94.0C136.3 88.7 138.3 82.3 141.4 81.3Z" fill="#2347C8"/><path d="M97.5 72.8C107.8 72.1 120.9 72.0 129.1 77.0C137.2 82.0 143.0 93.5 146.5 102.8C150.0 112.0 152.2 123.3 150.0 132.8C147.8 142.3 141.2 153.1 133.3 159.6C125.4 166.1 113.0 171.3 102.7 171.7C92.4 172.0 80.3 167.4 71.8 161.8C63.2 156.1 54.6 147.0 51.4 138.0C48.3 129.0 50.0 117.3 52.7 107.9C55.4 98.5 60.2 87.4 67.6 81.5C75.1 75.7 87.3 73.6 97.5 72.8Z" fill="#57B8FF"/><path d="M100.0 130.3C106.3 130.3 113.6 131.8 118.9 134.5C124.2 137.2 130.0 141.8 131.8 146.3C133.5 150.7 131.5 156.7 129.3 161.1C127.0 165.5 123.1 170.2 118.2 172.8C113.3 175.4 106.0 176.7 100.0 176.6C94.0 176.6 86.8 175.1 82.1 172.5C77.3 169.9 73.2 165.3 71.4 161.0C69.5 156.7 69.2 151.3 70.8 146.9C72.5 142.5 76.3 137.3 81.2 134.6C86.0 131.8 93.7 130.3 100.0 130.3Z" fill="#FFF1CF"/><path d="M100.0 131.2C102.6 131.3 105.7 131.7 107.6 132.7C109.6 133.7 111.0 135.7 111.7 137.4C112.5 139.0 112.9 141.1 112.1 142.7C111.4 144.3 109.3 146.0 107.2 146.9C105.2 147.9 102.4 148.4 100.0 148.5C97.6 148.5 94.5 148.1 92.6 147.1C90.6 146.1 89.0 144.3 88.2 142.7C87.4 141.0 87.3 139.0 87.9 137.3C88.6 135.6 90.1 133.5 92.1 132.5C94.1 131.5 97.4 131.2 100.0 131.2Z" fill="#17142B"/><path d="M80 166Q100 178 122 162" fill="none"/><rect x="104" y="166" width="8" height="8" rx="2" fill="#FFD43B" stroke-width="3"/><path d="M58 108Q58 98 70 98H94Q98 98 98 104Q98 126 78 126Q58 124 58 108Z" fill="#17142B"/><path d="M102 104Q102 98 108 98H132Q144 98 144 108Q142 124 122 126Q102 126 102 104Z" fill="#17142B"/><path d="M94 104h12" stroke-width="5" fill="none"/><path d="M66 108l10-6M110 108l10-6" stroke="#fff" stroke-width="3.5" fill="none"/><path d="M110.0 86.0C112.3 85.0 119.3 80.0 124.0 80.0C128.7 80.0 135.7 85.0 138.0 86.0" fill="none" stroke-width="4.5"/><circle cx="166" cy="56" r="17" fill="#FFD43B"/><text x="166" y="64" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="22" fill="#17142B" stroke="none">฿</text><path d="M140.0 32.0C140.3 32.0 141.7 37.4 142.1 37.9C142.6 38.3 148.0 39.7 148.0 40.0C148.0 40.3 142.6 41.7 142.1 42.1C141.7 42.6 140.3 48.0 140.0 48.0C139.7 48.0 138.3 42.6 137.9 42.1C137.4 41.7 132.0 40.3 132.0 40.0C132.0 39.7 137.4 38.3 137.9 37.9C138.3 37.4 139.7 32.0 140.0 32.0Z" fill="#FFD43B" stroke-width="3.5"/><path d="M188.0 80.0C188.2 80.0 189.3 84.0 189.6 84.4C190.0 84.7 194.0 85.8 194.0 86.0C194.0 86.2 190.0 87.3 189.6 87.6C189.3 88.0 188.2 92.0 188.0 92.0C187.8 92.0 186.7 88.0 186.4 87.6C186.0 87.3 182.0 86.2 182.0 86.0C182.0 85.8 186.0 84.7 186.4 84.4C186.7 84.0 187.8 80.0 188.0 80.0Z" fill="#FFD43B" stroke-width="3.5"/></g></symbol><symbol id="c-user" viewBox="0 0 200 240"><g stroke="#17142B" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"><path d="M170.2 102.0A16.8 16.8 0 0 1 166.5 126.5A17.2 17.2 0 0 1 149.2 145.7A15.2 15.2 0 0 1 128.4 163.0A16.8 16.8 0 0 1 100.0 164.3A17.2 17.2 0 0 1 72.3 161.4A18.6 18.6 0 0 1 46.9 149.2A15.2 15.2 0 0 1 34.2 126.2A16.5 16.5 0 0 1 24.6 102.0A15.8 15.8 0 0 1 31.9 76.9A17.4 17.4 0 0 1 48.8 56.5A18.4 18.4 0 0 1 72.1 42.1A18.5 18.5 0 0 1 100.0 37.4A16.2 16.2 0 0 1 127.2 43.7A18.5 18.5 0 0 1 153.4 54.5A16.1 16.1 0 0 1 165.9 77.7A16.3 16.3 0 0 1 170.2 102.0Z" fill="#B79CFF"/><path d="M22 246C26 204 58 196 100 196C142 196 174 204 178 246Z" fill="#2BC48A"/><circle cx="103.9" cy="237.2" r="4" fill="#fff" stroke="none"/><circle cx="62.8" cy="234.2" r="4" fill="#fff" stroke="none"/><circle cx="87.4" cy="220.7" r="4" fill="#fff" stroke="none"/><circle cx="163.8" cy="225.4" r="4" fill="#fff" stroke="none"/><circle cx="98.0" cy="232.7" r="4" fill="#fff" stroke="none"/><circle cx="148.0" cy="223.7" r="4" fill="#fff" stroke="none"/><circle cx="125.0" cy="213.4" r="4" fill="#fff" stroke="none"/><circle cx="82.6" cy="218.6" r="4" fill="#fff" stroke="none"/><circle cx="56.8" cy="211.4" r="4" fill="#fff" stroke="none"/><path d="M89 166L88 198H112L111 166" fill="#FFD3B5"/><path d="M103.3 78.5C111.6 79.4 120.1 87.3 126.8 93.3C133.6 99.4 141.6 106.5 143.9 114.8C146.2 123.0 143.9 134.2 140.7 142.8C137.5 151.3 131.8 161.5 124.5 166.1C117.2 170.7 105.9 171.0 96.9 170.4C87.9 169.7 76.5 167.9 70.2 162.2C63.9 156.6 61.3 145.5 59.0 136.5C56.8 127.5 53.8 116.3 56.8 108.2C59.8 100.2 69.2 93.2 77.0 88.3C84.7 83.3 95.0 77.7 103.3 78.5Z" fill="#FFD3B5"/><path d="M53.6 83.9A5.3 5.3 0 0 1 54.7 74.7A7.9 7.9 0 0 1 66.2 67.2A10.9 10.9 0 0 1 81.1 61.4A12.4 12.4 0 0 1 100.0 59.0A11.1 11.1 0 0 1 118.6 61.8A11.0 11.0 0 0 1 134.7 66.8A7.3 7.3 0 0 1 144.6 74.8A5.8 5.8 0 0 1 147.5 84.0L100.0 82.0Z" fill="#B79CFF" stroke="none"/><path d="M53.6 83.9A5.3 5.3 0 0 1 54.7 74.7A7.9 7.9 0 0 1 66.2 67.2A10.9 10.9 0 0 1 81.1 61.4A12.4 12.4 0 0 1 100.0 59.0A11.1 11.1 0 0 1 118.6 61.8A11.0 11.0 0 0 1 134.7 66.8A7.3 7.3 0 0 1 144.6 74.8A5.8 5.8 0 0 1 147.5 84.0" fill="none"/><path d="M70.0 118.0C71.7 117.0 77.0 112.0 80.0 112.0C83.0 112.0 86.7 117.0 88.0 118.0" fill="none" stroke-width="5.5"/><path d="M110 112l12 6-12 6" fill="none"/><path d="M66 128Q80 122 92 128M108 128Q120 122 134 128" fill="none" stroke-width="4"/><path d="M96 134q4 8 8 0" fill="none" stroke-width="4"/><ellipse cx="70.0" cy="146.0" rx="11" ry="7" fill="#FF8FB1" stroke="none" opacity=".85"/><ellipse cx="132.0" cy="146.0" rx="11" ry="7" fill="#FF8FB1" stroke="none" opacity=".85"/><path d="M86 150Q100 166 116 150Z" fill="#17142B"/><rect x="96" y="150" width="8" height="6" fill="#fff" stroke="none"/><g transform="rotate(12 150 196)"><rect x="134" y="168" width="34" height="56" rx="8" fill="#17142B"/><rect x="140" y="176" width="22" height="36" rx="3" fill="#57B8FF" stroke="none"/></g><path d="M124.0 230.0C126.0 226.7 134.0 213.3 136.0 210.0" fill="none" stroke="#17142B" stroke-width="21.9" stroke-linecap="round"/><path d="M124.0 230.0C126.0 226.7 134.0 213.3 136.0 210.0" fill="none" stroke="#FFD3B5" stroke-width="12" stroke-linecap="round"/><path d="M178.0 156.0l9.4 -3.4" fill="none" stroke-width="4"/><path d="M180.4 162.6l9.4 -3.4" fill="none" stroke-width="4"/><path d="M182.8 169.2l9.4 -3.4" fill="none" stroke-width="4"/></g></symbol><symbol id="c-poster" viewBox="0 0 200 240"><g stroke="#17142B" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"><path d="M80.0 196.0C79.0 199.7 77.0 212.7 74.0 218.0C71.0 223.3 64.0 226.3 62.0 228.0" fill="none" stroke="#17142B" stroke-width="18.9" stroke-linecap="round"/><path d="M80.0 196.0C79.0 199.7 77.0 212.7 74.0 218.0C71.0 223.3 64.0 226.3 62.0 228.0" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/><path d="M120.0 196.0C121.7 199.3 126.3 211.3 130.0 216.0C133.7 220.7 140.0 222.7 142.0 224.0" fill="none" stroke="#17142B" stroke-width="18.9" stroke-linecap="round"/><path d="M120.0 196.0C121.7 199.3 126.3 211.3 130.0 216.0C133.7 220.7 140.0 222.7 142.0 224.0" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/><path d="M56.0 219.0C59.1 219.0 62.8 219.7 65.5 220.7C68.1 221.7 70.9 223.4 71.8 225.1C72.7 226.8 72.0 229.1 70.9 230.7C69.8 232.4 67.7 234.0 65.2 235.1C62.7 236.2 59.1 237.2 56.0 237.2C52.9 237.2 49.1 236.3 46.6 235.3C44.1 234.2 42.0 232.4 41.0 230.7C40.1 229.1 40.0 226.9 41.0 225.3C41.9 223.6 44.3 221.9 46.8 220.9C49.3 219.8 52.9 219.0 56.0 219.0Z" fill="#FF4B3E"/><path d="M150.0 214.5C153.2 214.7 156.4 215.9 159.0 217.0C161.7 218.1 165.1 219.4 166.1 221.1C167.0 222.7 165.9 225.0 164.7 226.7C163.6 228.4 161.8 230.1 159.4 231.3C156.9 232.4 153.1 233.4 150.0 233.4C146.9 233.4 143.3 232.3 140.8 231.2C138.2 230.0 135.7 228.4 134.8 226.8C133.9 225.1 134.5 223.1 135.4 221.3C136.3 219.6 137.6 217.4 140.1 216.3C142.5 215.2 146.8 214.4 150.0 214.5Z" fill="#FF4B3E"/><path d="M48.0 110.0C44.0 107.0 28.7 99.7 24.0 92.0C19.3 84.3 20.7 68.7 20.0 64.0" fill="none" stroke="#17142B" stroke-width="18.9" stroke-linecap="round"/><path d="M48.0 110.0C44.0 107.0 28.7 99.7 24.0 92.0C19.3 84.3 20.7 68.7 20.0 64.0" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/><path d="M20.0 49.1C21.8 49.1 23.7 49.9 25.2 50.9C26.7 51.9 28.4 53.4 29.0 55.1C29.5 56.7 29.2 59.1 28.5 60.8C27.9 62.4 26.5 63.8 25.0 64.9C23.6 66.0 21.7 67.3 20.0 67.3C18.3 67.3 16.4 66.0 15.0 64.9C13.6 63.8 12.3 62.3 11.7 60.7C11.2 59.1 11.4 57.0 11.9 55.4C12.4 53.7 13.3 51.7 14.6 50.6C16.0 49.6 18.2 49.0 20.0 49.1Z" fill="#fff"/><path d="M152.0 118.0C156.0 120.7 170.7 127.3 176.0 134.0C181.3 140.7 182.7 154.0 184.0 158.0" fill="none" stroke="#17142B" stroke-width="18.9" stroke-linecap="round"/><path d="M152.0 118.0C156.0 120.7 170.7 127.3 176.0 134.0C181.3 140.7 182.7 154.0 184.0 158.0" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/><path d="M46.0 28.0C49.9 21.2 91.8 21.9 100.0 22.0C108.2 22.1 152.1 23.4 156.0 30.0C159.9 36.6 151.8 97.5 152.0 110.0C152.2 122.5 161.9 189.1 158.0 196.0C154.1 202.9 108.5 202.0 100.0 202.0C91.5 202.0 47.9 202.8 44.0 196.0C40.1 189.2 47.9 124.6 48.0 112.0C48.1 99.4 42.1 34.8 46.0 28.0Z" fill="#fff"/><path d="M60 40H140V60H60Z" fill="#6B4BF2" stroke-width="4"/><path d="M58 150H96V188H58Z" fill="#FFD43B" stroke-width="4"/><path d="M104 150H142V188H104Z" fill="#FF8AC6" stroke-width="4"/><path d="M80.0 81.3C83.4 81.4 87.7 83.0 90.0 85.5C92.3 87.9 93.8 92.4 93.9 96.0C93.9 99.6 92.6 104.5 90.3 106.8C88.0 109.2 83.4 110.0 80.0 110.0C76.6 110.0 72.0 109.2 69.6 106.9C67.2 104.6 65.7 99.6 65.7 96.0C65.7 92.4 67.4 87.7 69.8 85.3C72.2 82.8 76.6 81.3 80.0 81.3Z" fill="#fff"/><circle cx="77.5" cy="97.3" r="6.7" fill="#17142B" stroke="none"/><circle cx="75.1" cy="94.6" r="2.0" fill="#fff" stroke="none"/><path d="M116.0 78.4C119.5 78.4 123.8 80.5 126.4 83.1C129.0 85.7 131.5 90.3 131.5 94.0C131.5 97.7 129.1 102.4 126.5 105.1C124.0 107.7 119.5 109.8 116.0 109.8C112.5 109.8 107.8 107.8 105.3 105.2C102.9 102.6 101.3 97.7 101.2 94.0C101.2 90.3 102.8 85.3 105.2 82.7C107.7 80.1 112.5 78.3 116.0 78.4Z" fill="#fff"/><circle cx="113.3" cy="95.3" r="7.2" fill="#17142B" stroke="none"/><circle cx="110.8" cy="92.5" r="2.2" fill="#fff" stroke="none"/><path d="M84 120Q100 140 118 118Q100 124 84 120Z" fill="#17142B"/><path d="M57.5 125.0L63.5 115.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M64.5 125.0L70.5 115.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M127.5 123.0L133.5 113.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M134.5 123.0L140.5 113.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M12.0 40.0l-3.4 -9.4" fill="none" stroke-width="4"/><path d="M19.5 37.3l-3.4 -9.4" fill="none" stroke-width="4"/><path d="M27.0 34.5l-3.4 -9.4" fill="none" stroke-width="4"/></g></symbol><symbol id="c-prompt" viewBox="0 0 200 240"><g stroke="#17142B" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"><path d="M30.0 70.0C34.8 60.1 42.7 36.5 56.0 30.0C69.3 23.5 107.6 21.7 124.0 24.0C140.4 26.3 164.1 34.7 172.0 46.0C179.9 57.3 181.7 89.3 180.0 104.0C178.3 118.7 169.9 142.1 160.0 150.0C150.1 157.9 120.8 158.6 110.0 160.0C99.2 161.4 91.9 154.3 84.0 160.0C76.1 165.7 57.1 200.6 54.0 200.0C50.9 199.4 65.1 165.1 62.0 156.0C58.9 146.9 37.7 143.9 32.0 136.0C26.3 128.1 22.3 109.3 22.0 100.0C21.7 90.7 25.2 79.9 30.0 70.0Z" fill="#FF8AC6"/><path d="M74.0 57.4C78.2 57.3 84.0 59.4 86.9 62.5C89.7 65.6 91.0 71.4 91.1 76.0C91.2 80.6 90.2 86.8 87.3 90.0C84.5 93.3 78.5 95.5 74.0 95.5C69.5 95.5 63.6 93.3 60.6 90.0C57.7 86.8 56.3 80.5 56.4 76.0C56.6 71.5 58.7 66.1 61.7 63.0C64.6 59.9 69.8 57.5 74.0 57.4Z" fill="#fff"/><circle cx="76.4" cy="70.3" r="8.6" fill="#17142B" stroke="none"/><circle cx="73.4" cy="66.9" r="2.6" fill="#fff" stroke="none"/><path d="M118.0 47.9C123.3 47.9 129.9 49.8 133.7 53.5C137.5 57.2 141.1 64.6 141.1 70.0C141.0 75.4 137.2 82.2 133.3 86.1C129.5 89.9 123.1 93.2 118.0 93.2C112.9 93.2 106.4 90.0 102.6 86.1C98.9 82.3 95.6 75.5 95.5 70.0C95.4 64.5 98.4 57.0 102.2 53.4C105.9 49.7 112.7 47.9 118.0 47.9Z" fill="#fff"/><circle cx="121.0" cy="63.1" r="10.6" fill="#17142B" stroke="none"/><circle cx="117.3" cy="58.8" r="3.2" fill="#fff" stroke="none"/><path d="M84 108Q104 124 126 104" fill="none"/><path d="M104 114q4 18 14 6q-2-6-4-8z" fill="#FF4B3E" stroke-width="4"/><circle cx="74" cy="134" r="6" fill="#17142B" stroke="none"/><circle cx="98" cy="136" r="6" fill="#17142B" stroke="none"/><circle cx="122" cy="132" r="6" fill="#17142B" stroke="none"/><path d="M166.0 180.0C166.5 180.0 169.4 190.8 170.3 191.7C171.2 192.6 182.0 195.5 182.0 196.0C182.0 196.5 171.2 199.4 170.3 200.3C169.4 201.2 166.5 212.0 166.0 212.0C165.5 212.0 162.6 201.2 161.7 200.3C160.8 199.4 150.0 196.5 150.0 196.0C150.0 195.5 160.8 192.6 161.7 191.7C162.6 190.8 165.5 180.0 166.0 180.0Z" fill="#FFD43B" stroke-width="3.5"/><path d="M186.0 152.0C186.3 152.0 187.7 157.4 188.1 157.9C188.6 158.3 194.0 159.7 194.0 160.0C194.0 160.3 188.6 161.7 188.1 162.1C187.7 162.6 186.3 168.0 186.0 168.0C185.7 168.0 184.3 162.6 183.9 162.1C183.4 161.7 178.0 160.3 178.0 160.0C178.0 159.7 183.4 158.3 183.9 157.9C184.3 157.4 185.7 152.0 186.0 152.0Z" fill="#C8F04A" stroke-width="3.5"/><path d="M30.0 205.0C30.3 205.0 31.9 211.1 32.4 211.6C32.9 212.1 39.0 213.7 39.0 214.0C39.0 214.3 32.9 215.9 32.4 216.4C31.9 216.9 30.3 223.0 30.0 223.0C29.7 223.0 28.1 216.9 27.6 216.4C27.1 215.9 21.0 214.3 21.0 214.0C21.0 213.7 27.1 212.1 27.6 211.6C28.1 211.1 29.7 205.0 30.0 205.0Z" fill="#57B8FF" stroke-width="3.5"/></g></symbol><symbol id="c-idea" viewBox="0 0 200 240"><g stroke="#17142B" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"><path d="M56.0 120.0C52.3 115.3 38.3 101.7 34.0 92.0C29.7 82.3 30.7 67.0 30.0 62.0" fill="none" stroke="#17142B" stroke-width="19.9" stroke-linecap="round"/><path d="M56.0 120.0C52.3 115.3 38.3 101.7 34.0 92.0C29.7 82.3 30.7 67.0 30.0 62.0" fill="none" stroke="#FFD43B" stroke-width="10" stroke-linecap="round"/><path d="M30.0 46.0C32.0 46.1 34.2 46.8 35.8 48.0C37.4 49.1 39.0 51.0 39.6 52.9C40.2 54.7 40.0 57.1 39.4 59.0C38.8 61.0 37.7 63.3 36.1 64.4C34.6 65.5 32.0 65.7 30.0 65.6C28.0 65.5 25.8 65.1 24.2 64.0C22.5 63.0 20.8 61.0 20.2 59.2C19.6 57.3 19.8 54.8 20.4 52.9C21.0 50.9 22.2 48.7 23.8 47.5C25.4 46.4 28.0 45.9 30.0 46.0Z" fill="#FFD43B"/><path d="M144.0 120.0C147.7 115.3 161.3 101.7 166.0 92.0C170.7 82.3 171.0 67.0 172.0 62.0" fill="none" stroke="#17142B" stroke-width="19.9" stroke-linecap="round"/><path d="M144.0 120.0C147.7 115.3 161.3 101.7 166.0 92.0C170.7 82.3 171.0 67.0 172.0 62.0" fill="none" stroke="#FFD43B" stroke-width="10" stroke-linecap="round"/><path d="M172.0 46.4C174.0 46.4 176.3 46.8 177.9 47.9C179.5 49.0 180.8 51.0 181.5 52.9C182.2 54.8 182.6 57.3 182.0 59.3C181.5 61.2 179.8 63.2 178.1 64.4C176.4 65.6 174.0 66.4 172.0 66.3C170.0 66.3 167.5 65.5 166.0 64.3C164.5 63.0 163.5 60.9 162.9 59.0C162.2 57.0 161.5 54.6 162.0 52.8C162.6 50.9 164.5 49.0 166.2 48.0C167.8 46.9 170.0 46.4 172.0 46.4Z" fill="#FFD43B"/><path d="M100.0 40.0C113.8 40.0 137.6 48.4 146.0 58.0C154.4 67.6 158.1 90.5 156.0 104.0C153.9 117.5 136.5 138.1 132.0 148.0C127.5 157.9 134.7 166.7 126.0 170.0C117.3 173.3 82.7 173.3 74.0 170.0C65.3 166.7 72.5 157.9 68.0 148.0C63.5 138.1 46.1 117.5 44.0 104.0C41.9 90.5 45.6 67.6 54.0 58.0C62.4 48.4 86.2 40.0 100.0 40.0Z" fill="#FFD43B"/><path d="M72 170H128V184Q100 192 72 184Z" fill="#DCD6EA"/><path d="M74 184H126V196Q100 204 74 196Z" fill="#B7AFCB"/><path d="M88 200Q100 214 112 200Z" fill="#17142B"/><path d="M84.0 86.3C87.6 86.2 92.6 87.8 95.0 90.5C97.4 93.1 98.5 98.2 98.4 102.0C98.3 105.8 96.9 110.5 94.5 113.0C92.1 115.5 87.5 117.0 84.0 117.0C80.5 117.1 75.7 115.8 73.2 113.3C70.8 110.8 69.4 105.7 69.5 102.0C69.5 98.3 71.2 93.7 73.6 91.1C76.0 88.5 80.4 86.4 84.0 86.3Z" fill="#fff"/><polygon points="85.3,95.7 87.5,101.1 93.2,101.5 88.8,105.1 90.2,110.7 85.3,107.6 80.5,110.7 81.9,105.1 77.5,101.5 83.2,101.1" fill="#FFD43B" stroke-width="3"/><path d="M118.0 83.9C121.6 83.8 126.7 85.7 129.0 88.4C131.4 91.1 132.5 96.3 132.3 100.0C132.1 103.7 130.5 107.8 128.1 110.6C125.7 113.3 121.4 116.5 118.0 116.5C114.6 116.6 110.0 113.7 107.6 110.9C105.2 108.2 103.5 103.7 103.5 100.0C103.4 96.3 105.0 91.6 107.4 88.9C109.8 86.2 114.4 84.0 118.0 83.9Z" fill="#fff"/><polygon points="119.3,93.7 121.5,99.1 127.2,99.5 122.8,103.1 124.2,108.7 119.3,105.6 114.5,108.7 115.9,103.1 111.5,99.5 117.2,99.1" fill="#FFD43B" stroke-width="3"/><path d="M86 128Q100 146 116 128Z" fill="#17142B"/><path d="M59.5 129.0L65.5 119.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M66.5 129.0L72.5 119.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M129.5 127.0L135.5 117.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M136.5 127.0L142.5 117.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M100.0 4.0C99.3 5.7 95.7 11.0 96.0 14.0C96.3 17.0 101.0 20.7 102.0 22.0" fill="none" stroke-width="4.5"/><path d="M56.0 20.0C56.7 21.7 60.0 27.0 60.0 30.0C60.0 33.0 56.7 36.7 56.0 38.0" fill="none" stroke-width="4.5"/><path d="M146.0 20.0C145.3 21.7 141.7 27.0 142.0 30.0C142.3 33.0 147.0 36.7 148.0 38.0" fill="none" stroke-width="4.5"/><path d="M18.0 131.0C18.3 131.0 19.9 137.1 20.4 137.6C20.9 138.1 27.0 139.7 27.0 140.0C27.0 140.3 20.9 141.9 20.4 142.4C19.9 142.9 18.3 149.0 18.0 149.0C17.7 149.0 16.1 142.9 15.6 142.4C15.1 141.9 9.0 140.3 9.0 140.0C9.0 139.7 15.1 138.1 15.6 137.6C16.1 137.1 17.7 131.0 18.0 131.0Z" fill="#FF8AC6" stroke-width="3.5"/><path d="M184.0 135.0C184.3 135.0 185.9 141.1 186.4 141.6C186.9 142.1 193.0 143.7 193.0 144.0C193.0 144.3 186.9 145.9 186.4 146.4C185.9 146.9 184.3 153.0 184.0 153.0C183.7 153.0 182.1 146.9 181.6 146.4C181.1 145.9 175.0 144.3 175.0 144.0C175.0 143.7 181.1 142.1 181.6 141.6C182.1 141.1 183.7 135.0 184.0 135.0Z" fill="#57B8FF" stroke-width="3.5"/></g></symbol><symbol id="c-speaker" viewBox="0 0 200 240"><g stroke="#17142B" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"><g><path d="M150 0V46" fill="none" stroke-width="2.5"/><g><animateTransform attributeName="transform" type="rotate" values="-10 150 0;10 150 0;-10 150 0" dur="2.6s" repeatCount="indefinite"/><path d="M150 0V40" fill="none" stroke-width="2.5"/><path d="M150 50Q141.6 38.0 136.0 44.0" fill="none" stroke-width="3"/><path d="M150 50Q140.4 46.0 134.0 52.0" fill="none" stroke-width="3"/><path d="M150 50Q141.6 54.0 136.0 60.0" fill="none" stroke-width="3"/><path d="M150 50Q144.0 60.0 140.0 66.0" fill="none" stroke-width="3"/><path d="M150 50Q158.4 38.0 164.0 44.0" fill="none" stroke-width="3"/><path d="M150 50Q159.6 46.0 166.0 52.0" fill="none" stroke-width="3"/><path d="M150 50Q158.4 54.0 164.0 60.0" fill="none" stroke-width="3"/><path d="M150 50Q156.0 60.0 160.0 66.0" fill="none" stroke-width="3"/><path d="M150.0 40.5C152.1 40.5 154.4 41.2 156.2 42.2C158.0 43.3 160.1 45.1 160.7 46.8C161.3 48.6 160.7 51.0 160.0 53.0C159.4 54.9 158.5 57.3 156.8 58.5C155.1 59.8 152.2 60.4 150.0 60.4C147.8 60.4 145.1 59.5 143.3 58.3C141.6 57.1 140.3 55.0 139.6 53.1C138.9 51.2 138.4 48.6 139.1 46.8C139.8 45.0 141.9 43.2 143.7 42.2C145.5 41.1 147.9 40.5 150.0 40.5Z" fill="#17142B"/><circle cx="146" cy="49" r="3.4" fill="#fff" stroke="none"/><circle cx="154" cy="49" r="3.4" fill="#fff" stroke="none"/><circle cx="147" cy="50" r="1.6" fill="#17142B" stroke="none"/><circle cx="155" cy="50" r="1.6" fill="#17142B" stroke="none"/></g></g><path d="M22 246C26 200 58 192 100 192C142 192 174 200 178 246Z" fill="#fff"/><path d="M80 194Q100 210 120 194" fill="none" stroke-width="4"/><path d="M88 164L87 196H113L112 164" fill="#D99A6C"/><path d="M56 108c-14-3-16 24 0 24M144 106c14-3 16 24 0 24" fill="#D99A6C"/><path d="M97.2 66.5C106.0 66.0 116.8 68.8 124.3 74.6C131.8 80.3 138.9 91.0 142.2 100.9C145.4 110.8 146.1 123.8 144.0 134.0C142.0 144.1 136.5 155.3 129.6 162.1C122.8 168.9 111.9 174.5 102.9 174.8C93.8 175.2 83.0 170.3 75.3 164.3C67.6 158.3 59.8 148.8 56.5 139.0C53.3 129.2 53.5 115.6 56.0 105.4C58.5 95.2 64.5 84.3 71.4 77.8C78.3 71.4 88.4 67.0 97.2 66.5Z" fill="#D99A6C"/><path d="M54.0 112.0C53.3 111.5 51.6 85.3 52.0 84.0C52.4 82.7 59.6 90.8 60.0 90.0C60.4 89.2 57.4 71.7 58.0 71.0C58.6 70.4 69.2 78.7 70.0 78.2C70.8 77.7 71.2 62.8 72.0 62.4C72.8 62.0 83.0 71.4 84.0 71.0C85.0 70.7 89.1 56.8 90.0 56.6C90.9 56.5 98.8 68.2 100.0 68.2C101.2 68.1 109.1 55.2 110.0 55.2C110.9 55.2 115.0 67.9 116.0 68.2C117.0 68.4 127.2 59.3 128.0 59.5C128.8 59.8 129.2 72.1 130.0 72.5C130.8 72.9 141.4 66.2 142.0 66.7C142.6 67.2 139.7 80.2 140.0 81.1C140.3 82.0 147.7 80.9 148.0 82.6C148.3 84.2 146.7 109.7 146.0 110.0C145.3 110.3 137.6 89.7 136.0 88.0C134.4 86.3 120.1 81.4 118.0 81.1C115.9 80.9 102.2 84.0 100.0 84.0C97.8 84.0 82.1 80.7 80.0 81.1C77.9 81.6 65.5 90.2 64.0 92.0C62.5 93.8 54.7 112.5 54.0 112.0Z" fill="#17142B"/><path d="M70 104q10-7 22-3M108 101q12-5 22 2" fill="none" stroke-width="6.5"/><path d="M72 118q9-10 18 0M110 116q9-10 18 0" fill="none" stroke-width="5.5"/><path d="M100 120q-6 12 2 15" fill="none" stroke-width="4"/><path d="M72 140Q100 182 130 138Q100 146 72 140Z" fill="#17142B"/><path d="M76 141Q100 147 126 140L124 150Q100 155 78 151Z" fill="#fff" stroke="none"/><path d="M92 164Q101 158 110 163Q103 170 94 168Z" fill="#FF7A9E" stroke="none"/><path d="M52.0 141.0L58.0 131.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M59.0 141.0L65.0 131.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M66.0 141.0L72.0 131.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M130.0 137.0L136.0 127.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M137.0 137.0L143.0 127.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M144.0 137.0L150.0 127.0" stroke="#FF5F8F" stroke-width="3.5" fill="none"/><path d="M36.0 236.0C41.7 232.3 52.7 218.3 70.0 214.0C87.3 209.7 128.3 210.7 140.0 210.0" fill="none" stroke="#17142B" stroke-width="25.9" stroke-linecap="round"/><path d="M36.0 236.0C41.7 232.3 52.7 218.3 70.0 214.0C87.3 209.7 128.3 210.7 140.0 210.0" fill="none" stroke="#D99A6C" stroke-width="16" stroke-linecap="round"/><path d="M166.0 236.0C160.3 233.7 149.0 224.0 132.0 222.0C115.0 220.0 75.3 223.7 64.0 224.0" fill="none" stroke="#17142B" stroke-width="25.9" stroke-linecap="round"/><path d="M166.0 236.0C160.3 233.7 149.0 224.0 132.0 222.0C115.0 220.0 75.3 223.7 64.0 224.0" fill="none" stroke="#D99A6C" stroke-width="16" stroke-linecap="round"/><path d="M60.0 213.5C62.1 213.4 64.7 214.7 66.5 215.9C68.2 217.1 69.9 219.0 70.5 220.9C71.2 222.7 71.0 225.2 70.3 227.0C69.5 228.8 67.9 230.6 66.2 231.7C64.5 232.8 62.1 233.8 60.0 233.8C57.9 233.8 55.5 232.9 53.8 231.8C52.1 230.6 50.7 228.7 50.0 226.9C49.4 225.2 49.3 222.8 50.0 221.0C50.6 219.3 52.2 217.6 53.9 216.4C55.6 215.1 57.9 213.6 60.0 213.5Z" fill="#D99A6C"/><rect x="84" y="215" width="18" height="18" rx="5" fill="#17142B" stroke-width="3"/><rect x="88" y="219" width="10" height="10" rx="2" fill="#57B8FF" stroke="none"/><path d="M30.0 51.0C30.3 51.0 31.9 57.1 32.4 57.6C32.9 58.1 39.0 59.7 39.0 60.0C39.0 60.3 32.9 61.9 32.4 62.4C31.9 62.9 30.3 69.0 30.0 69.0C29.7 69.0 28.1 62.9 27.6 62.4C27.1 61.9 21.0 60.3 21.0 60.0C21.0 59.7 27.1 58.1 27.6 57.6C28.1 57.1 29.7 51.0 30.0 51.0Z" fill="#FFD43B" stroke-width="3.5"/><path d="M178.0 113.0C178.2 113.0 179.5 117.7 179.9 118.1C180.3 118.5 185.0 119.8 185.0 120.0C185.0 120.2 180.3 121.5 179.9 121.9C179.5 122.3 178.2 127.0 178.0 127.0C177.8 127.0 176.5 122.3 176.1 121.9C175.7 121.5 171.0 120.2 171.0 120.0C171.0 119.8 175.7 118.5 176.1 118.1C176.5 117.7 177.8 113.0 178.0 113.0Z" fill="#C8F04A" stroke-width="3.5"/></g></symbol></defs></svg>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="m-fan" viewBox="0 0 210 210"><path d="M100 30C150 28 182 66 178 114C174 164 142 190 100 190C54 190 24 162 24 114C24 64 52 32 100 30Z" fill="#FF8AC6"/><path d="M68 104q11-13 22 0M112 104q11-13 22 0" stroke="#17142B" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M86 130q15 14 30 0" stroke="#17142B" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="62" cy="124" r="9" fill="#FF4F9A" opacity=".55"/><circle cx="140" cy="124" r="9" fill="#FF4F9A" opacity=".55"/><path d="M172 132L194 62" stroke="#17142B" stroke-width="7" stroke-linecap="round"/><circle cx="196" cy="50" r="14" fill="#C8F04A" stroke="#17142B" stroke-width="4"/></symbol>
+    <symbol id="m-out" viewBox="0 0 210 210"><rect x="34" y="56" width="142" height="142" rx="54" fill="#3E68FF"/><circle cx="80" cy="118" r="17" fill="#fff"/><circle cx="130" cy="118" r="17" fill="#fff"/><circle cx="84" cy="114" r="7" fill="#17142B"/><circle cx="134" cy="114" r="7" fill="#17142B"/><circle cx="105" cy="160" r="7" fill="#17142B"/><text x="150" y="52" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="54" fill="#FFD43B" stroke="#17142B" stroke-width="3" paint-order="stroke">?</text></symbol>
+    <symbol id="m-out-w" viewBox="0 0 210 210"><rect x="34" y="56" width="142" height="142" rx="54" fill="#fff"/><circle cx="80" cy="118" r="17" fill="#3E68FF"/><circle cx="130" cy="118" r="17" fill="#3E68FF"/><circle cx="84" cy="114" r="7" fill="#17142B"/><circle cx="134" cy="114" r="7" fill="#17142B"/><circle cx="105" cy="160" r="7" fill="#17142B"/><text x="150" y="52" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="54" fill="#FFD43B" stroke="#17142B" stroke-width="3" paint-order="stroke">?</text></symbol>
+    <symbol id="m-fan-w" viewBox="0 0 210 210"><path d="M100 30C150 28 182 66 178 114C174 164 142 190 100 190C54 190 24 162 24 114C24 64 52 32 100 30Z" fill="#fff"/><path d="M68 104q11-13 22 0M112 104q11-13 22 0" stroke="#17142B" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M86 130q15 14 30 0" stroke="#17142B" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="62" cy="124" r="9" fill="#FF4F9A" opacity=".55"/><circle cx="140" cy="124" r="9" fill="#FF4F9A" opacity=".55"/><path d="M172 132L194 62" stroke="#17142B" stroke-width="7" stroke-linecap="round"/><circle cx="196" cy="50" r="14" fill="#C8F04A" stroke="#17142B" stroke-width="4"/></symbol>
+    <symbol id="m-pres" viewBox="0 0 230 210"><path d="M100 30C150 28 182 66 178 114C174 164 142 190 100 190C54 190 24 162 24 114C24 64 52 32 100 30Z" fill="#fff" stroke="#17142B" stroke-width="5"/><path d="M66 100q11-13 22 0M110 100q11-13 22 0" stroke="#17142B" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M80 124q20 26 40 0Z" fill="#17142B"/><circle cx="58" cy="122" r="9" fill="#FF4F9A" opacity=".55"/><circle cx="142" cy="122" r="9" fill="#FF4F9A" opacity=".55"/><path d="M172 134L194 92" stroke="#17142B" stroke-width="7" stroke-linecap="round"/><circle cx="198" cy="82" r="13" fill="#17142B"/></symbol>
+    <symbol id="j-hci" viewBox="0 0 160 170"><circle cx="80" cy="104" r="60" fill="#6B4BF2"/><circle cx="58" cy="92" r="15" fill="#fff" stroke="#17142B" stroke-width="4"/><circle cx="102" cy="92" r="15" fill="#fff" stroke="#17142B" stroke-width="4"/><path d="M73 92h14" stroke="#17142B" stroke-width="4"/><circle cx="59" cy="90" r="5" fill="#17142B"/><circle cx="103" cy="90" r="5" fill="#17142B"/><path d="M64 128h32" stroke="#17142B" stroke-width="5" stroke-linecap="round"/><path d="M36 46l44-20 44 20-44 20z" fill="#17142B"/></symbol>
+    <symbol id="j-ux" viewBox="0 0 160 170"><rect x="22" y="40" width="116" height="124" rx="42" fill="#FF7A2F"/><circle cx="58" cy="92" r="13" fill="#fff"/><circle cx="102" cy="92" r="13" fill="#fff"/><circle cx="60" cy="89" r="5" fill="#17142B"/><circle cx="104" cy="89" r="5" fill="#17142B"/><path d="M42 68q13-12 30-3M90 72h26" stroke="#17142B" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M62 128q16 8 32-4" stroke="#17142B" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M128 36l14-28" stroke="#FFD43B" stroke-width="10" stroke-linecap="round"/></symbol>
+    <symbol id="j-biz" viewBox="0 0 160 170"><rect x="30" y="26" width="100" height="140" rx="36" fill="#FFD43B"/><circle cx="62" cy="80" r="6" fill="#17142B"/><circle cx="98" cy="80" r="6" fill="#17142B"/><path d="M64 106q16 10 32 0" stroke="#17142B" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M80 130l-10 14 10 18 10-18z" fill="#17142B"/><rect x="73" y="124" width="14" height="8" rx="2" fill="#17142B"/></symbol>
+    <symbol id="j-user" viewBox="0 0 160 170"><ellipse cx="80" cy="104" rx="62" ry="58" fill="#FF8AC6"/><circle cx="60" cy="94" r="12" fill="#fff"/><circle cx="100" cy="94" r="12" fill="#fff"/><circle cx="61" cy="91" r="5" fill="#17142B"/><circle cx="101" cy="91" r="5" fill="#17142B"/><circle cx="80" cy="124" r="7" fill="#17142B"/><circle cx="44" cy="118" r="8" fill="#FF4F9A" opacity=".6"/><circle cx="116" cy="118" r="8" fill="#FF4F9A" opacity=".6"/><rect x="120" y="112" width="24" height="40" rx="6" fill="#17142B"/></symbol>
+  </defs>
+</svg>
+
+<div id="viewport"><div id="deck">
+
+<!-- 1 title -->
+<section class="slide bg-purple" data-title="title">
+  <div style="display:flex;gap:16px">
+    <span class="st a" style="--d:0;background:var(--lime);color:var(--ink);transform:rotate(-3deg)">UX/UI Festival 2026</span>
+    <span class="st a" style="--d:1;background:var(--yellow);color:var(--ink);transform:rotate(2deg)">Online workshop · 23 พ.ย. 69</span>
+  </div>
+  <h1 class="h-xl a" style="--d:2;margin-top:70px;max-width:1000px">From Prompt to <span class="pill" style="background:var(--lime);color:var(--ink);transform:rotate(-2deg)">Visual Pitch</span></h1>
+  <p class="big a" style="--d:4;margin-top:50px;color:#E9E3FF;max-width:1000px">เปลี่ยนไอเดียผ่าน prompt ให้เป็นโปสเตอร์นำเสนอที่สื่อสารชัด ดึงดูด และมี impact</p>
+  <p class="body a" style="--d:5;margin-top:60px">ผศ.ดร.พฤทธิ์ พุฒจร (อ.แมงมุม) · มหาวิทยาลัยแม่ฟ้าหลวง</p>
+  <div style="position:absolute;right:100px;top:330px;display:flex;align-items:flex-end;gap:24px">
+    <div class="ctl pop" style="--d:3;transform:rotate(-4deg)"><div class="pic" style="background:#FFE24D;height:360px;width:300px"><svg class="mascot" width="280" height="336" viewBox="0 0 200 240"><use href="#c-fan"/></svg></div></div>
+    <div class="ctl pop" style="--d:4;transform:rotate(3deg) translateY(40px)"><div class="pic" style="background:#FF8AC6;height:360px;width:300px"><svg class="mascot" width="280" height="336" viewBox="0 0 200 240"><use href="#c-out"/></svg></div></div>
+  </div>
+  <svg class="squig" style="right:-40px;bottom:-30px" width="760" height="180" viewBox="0 0 760 180"><path class="draw" style="--len:1200;--d:5" d="M20 120c60-80 120 80 180 0s120 80 180 0 120 80 180 0 100 40 160 10" fill="none" stroke="#C8F04A" stroke-width="30" stroke-linecap="round"/></svg>
+</section>
+
+<!-- speaker -->
+<section class="slide" data-title="speaker" style="display:flex;align-items:center;gap:110px">
+  <div class="spkpic pop" style="--d:0"><svg class="mascot" width="540" height="648" viewBox="0 0 200 240"><use href="#c-speaker"/></svg></div>
+  <div>
+    <span class="kicker a" style="--d:1">วิทยากร</span>
+    <h2 class="a" style="--d:2;font-size:92px;line-height:1.1">ผศ.ดร.พฤทธิ์ พุฒจร</h2>
+    <span class="st pop" style="--d:3;background:var(--pink);border:4px solid var(--ink);font-size:40px;transform:rotate(-3deg);margin-top:18px">อ.แมงมุม</span>
+    <p class="big a" style="--d:4;margin-top:26px;color:var(--soft)">ผู้ช่วยศาสตราจารย์ด้าน AI · มหาวิทยาลัยแม่ฟ้าหลวง</p>
+    <div class="a" style="--d:5;display:flex;gap:14px;flex-wrap:wrap;margin-top:26px">
+      <span class="st" style="background:var(--lime)">AI for Learning</span><span class="st" style="background:var(--pink)">UX/UI &amp; HCI</span><span class="st" style="background:var(--yellow)">Prompt Design</span><span class="st" style="background:var(--blue-bg)">Digital Heritage</span>
+    </div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:46px">
+      <span class="cbtn pop" style="--d:6;background:var(--ink);color:#fff">✉ pruet@mfu.ac.th</span>
+      <span class="cbtn pop" style="--d:7;background:var(--lime)">🔗 linktr.ee/spidyhero</span>
+    </div>
+  </div>
+</section>
+
+<!-- 2 agenda -->
+<section class="slide" data-title="agenda">
+  <span class="kicker a">60 นาทีของเรา</span>
+  <h2 class="h-l a" style="--d:1">วันนี้จะได้อะไรกลับไป</h2>
+  <div class="grid5" style="grid-template-columns:repeat(4,1fr);margin-top:70px">
+    <div class="tile pop" style="--d:2;background:var(--lime)"><div class="blobnum" style="width:120px;height:120px;font-size:64px;background:var(--ink);color:var(--lime)">1</div><h3 class="h-m" style="margin-top:30px;font-size:44px">โปสเตอร์ HCI ที่ดี</h3><p class="small" style="margin-top:14px">10 นาที</p></div>
+    <div class="tile pop" style="--d:3;background:var(--pink)"><div class="blobnum" style="width:120px;height:120px;font-size:64px;background:var(--ink);color:var(--pink)">2</div><h3 class="h-m" style="margin-top:30px;font-size:44px">ติ่ง × คนนอกด้อม</h3><p class="small" style="margin-top:14px">10 นาที</p></div>
+    <div class="tile pop" style="--d:4;background:var(--yellow)"><div class="blobnum" style="width:120px;height:120px;font-size:64px;background:var(--ink);color:var(--yellow)">3</div><h3 class="h-m" style="margin-top:30px;font-size:44px">Workflow 6 ขั้น</h3><p class="small" style="margin-top:14px">20 นาที</p></div>
+    <div class="tile pop" style="--d:5;background:var(--orange);color:#fff"><div class="blobnum" style="width:120px;height:120px;font-size:64px;background:var(--ink);color:var(--orange)">4</div><h3 class="h-m" style="margin-top:30px;font-size:44px">ภาพ พิช กรรมการ</h3><p class="small" style="margin-top:14px">15 นาที + Q&amp;A</p></div>
+  </div>
+  <p class="big a" style="--d:6;margin-top:60px">เตรียม <b>ไฟล์ผลการศึกษาของทีม</b> และ <b>แอป AI 1 ตัว</b> ไว้ เราจะลองไปพร้อมกัน</p>
+</section>
+
+<!-- cast -->
+<section class="slide" data-title="cast">
+  <span class="kicker a">ตัวละครในเรื่อง</span>
+  <h2 class="h-l a" style="--d:1">แก๊งที่จะพาเราไปวันนี้</h2>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:24px;margin-top:36px"><div class="ctl pop" style="--d:2"><div class="pic" style="background:#FFE24D"><svg class="mascot" width="170" height="195" viewBox="0 0 200 240"><use href="#c-fan"/></svg></div><div class="cap"><b>ติ่ง</b><span>แชทหลักที่รู้ทุกอย่าง</span></div></div><div class="ctl pop" style="--d:3"><div class="pic" style="background:#FF8AC6"><svg class="mascot" width="170" height="195" viewBox="0 0 200 240"><use href="#c-out"/></svg></div><div class="cap"><b>คนนอกด้อม</b><span>แชทใหม่ที่ไม่รู้อะไรเลย</span></div></div><div class="ctl pop" style="--d:4"><div class="pic" style="background:#C8F04A"><svg class="mascot" width="170" height="195" viewBox="0 0 200 240"><use href="#c-pres"/></svg></div><div class="cap"><b>ผู้นำเสนอ</b><span>คุณเองในวันโชว์</span></div></div><div class="ctl pop" style="--d:5"><div class="pic" style="background:#FFB36B"><svg class="mascot" width="170" height="195" viewBox="0 0 200 240"><use href="#c-hci"/></svg></div><div class="cap"><b>อาจารย์ HCI</b><span>จับผิดระเบียบวิธี</span></div></div><div class="ctl pop" style="--d:6"><div class="pic" style="background:#7FD3FF"><svg class="mascot" width="170" height="195" viewBox="0 0 200 240"><use href="#c-ux"/></svg></div><div class="cap"><b>UX designer</b><span>ถามเรื่องใช้งานจริง</span></div></div><div class="ctl pop" style="--d:7"><div class="pic" style="background:#FFD43B"><svg class="mascot" width="170" height="195" viewBox="0 0 200 240"><use href="#c-biz"/></svg></div><div class="cap"><b>ผู้ประกอบการ</b><span>ใครจ่าย ไปต่อได้ไหม</span></div></div><div class="ctl pop" style="--d:8"><div class="pic" style="background:#FFE2F1"><svg class="mascot" width="170" height="195" viewBox="0 0 200 240"><use href="#c-user"/></svg></div><div class="cap"><b>ผู้ใช้จริง</b><span>ใช้ง่ายไหม ปลอดภัยไหม</span></div></div><div class="ctl pop" style="--d:9"><div class="pic" style="background:#3E68FF"><svg class="mascot" width="170" height="195" viewBox="0 0 200 240"><use href="#c-poster"/></svg></div><div class="cap"><b>น้องโปสเตอร์</b><span>85×120 cm 9 โซน</span></div></div><div class="ctl pop" style="--d:10"><div class="pic" style="background:#FFF1A8"><svg class="mascot" width="170" height="195" viewBox="0 0 200 240"><use href="#c-prompt"/></svg></div><div class="cap"><b>น้อง Prompt</b><span>5 ช่องที่ต้องมี</span></div></div><div class="ctl pop" style="--d:11"><div class="pic" style="background:#6B4BF2"><svg class="mascot" width="170" height="195" viewBox="0 0 200 240"><use href="#c-idea"/></svg></div><div class="cap"><b>น้องไอเดีย</b><span>Visual Studio</span></div></div></div>
+</section>
+
+<!-- 3 statement -->
+<section class="slide" data-title="statement" style="display:flex;flex-direction:column;justify-content:center">
+  <span class="st pop" style="--d:0;background:var(--yellow);align-self:flex-start;transform:rotate(-3deg)">จำประโยคนี้ไว้</span>
+  <h2 class="a" style="--d:1;font-size:104px;line-height:1.25;margin-top:40px;max-width:1500px">โปสเตอร์ไม่ใช่รายงานที่แปะผนัง<br>แต่คือ <span class="pill" style="background:var(--lime)">pitch</span> ที่ยืนรอคนเดินผ่าน</h2>
+  <svg class="mascot bob pop" style="--d:3;position:absolute;right:140px;bottom:110px" width="300" height="300"><use href="#c-out"/></svg>
+</section>
+
+<!-- 4 3-30-3 -->
+<section class="slide" data-title="rule-3-30-3">
+  <span class="kicker a">กฎ 3–30–3</span>
+  <h2 class="h-l a" style="--d:1">ผู้ชมให้เวลาเราไม่เท่ากัน</h2>
+  <div class="grid3" style="margin-top:70px">
+    <div class="tile pop" style="--d:2;background:var(--lime)"><div style="font-family:var(--display);font-weight:800;font-size:150px;line-height:1">3<span style="font-size:60px"> วิ</span></div><h3 style="font-size:46px;margin-top:20px">คนเดินผ่าน</h3><p class="small" style="margin-top:12px">เห็นชื่อ ประโยคขายไอเดีย และภาพใหญ่ แล้วรู้ว่าผลงานช่วยใคร</p></div>
+    <div class="tile pop" style="--d:3;background:var(--yellow)"><div style="font-family:var(--display);font-weight:800;font-size:150px;line-height:1">30<span style="font-size:60px"> วิ</span></div><h3 style="font-size:46px;margin-top:20px">คนที่หยุดดู</h3><p class="small" style="margin-top:12px">อ่านแค่หัวข้อและตัวหนาก็เข้าใจเรื่องทั้งหมด</p></div>
+    <div class="tile pop" style="--d:4;background:var(--purple);color:#fff"><div style="font-family:var(--display);font-weight:800;font-size:150px;line-height:1">3<span style="font-size:60px"> นาที</span></div><h3 style="font-size:46px;margin-top:20px">คนที่สนใจจริง</h3><p class="small" style="margin-top:12px">อ่านรายละเอียด ดูผลทดสอบ และสแกน QR ลองใช้</p></div>
+  </div>
+</section>
+
+<!-- 5 divider 1 -->
+<section class="slide bg-lime divider" data-title="part-1">
+  <div class="blobnum pop" style="--d:0">1</div>
+  <div><span class="kicker a" style="--d:1">Part 1</span><h2 class="a" style="--d:2;font-size:120px">โปสเตอร์ UX/UI<br>ที่ดีหน้าตาแบบไหน</h2></div>
+  <svg class="mascot bob pop" style="--d:3;position:absolute;right:110px;bottom:60px" width="260" height="312"><use href="#c-poster"/></svg>
+</section>
+
+<!-- 6 nine zones -->
+<section class="slide" data-title="nine-zones" style="display:grid;grid-template-columns:600px 1fr;gap:100px;align-items:center">
+  <div style="background:var(--orange);border-radius:36px;padding:26px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;height:780px;background:var(--paper);padding:12px;border-radius:22px">
+      <div class="z pop" style="--d:0;grid-column:span 2;background:#EAE6F5"><b>1 Header</b>12%</div>
+      <div class="z pop" style="--d:1;background:var(--pink)"><b>2 ปัญหา</b>10%</div>
+      <div class="z pop" style="--d:2;background:var(--pink)"><b>3 ผู้ใช้</b>14%</div>
+      <div class="z pop" style="--d:3;grid-column:span 2;background:var(--pink)"><b>4 กระบวนการ HCI</b>12%</div>
+      <div class="z pop" style="--d:4;grid-column:span 2;grid-row:span 2;background:var(--lime)"><b>5 แนวทางแก้ไข</b>28% · ใหญ่ที่สุด</div>
+      <div class="z pop" style="--d:5;background:var(--lime)"><b>6 ทดสอบ</b>12%</div>
+      <div style="display:grid;gap:10px"><div class="z pop" style="--d:6;background:var(--yellow)"><b>7 ต่อไป</b></div><div class="z pop" style="--d:7;background:var(--yellow)"><b>8 Try it!</b></div></div>
+      <div class="z pop" style="--d:8;grid-column:span 2;background:#EAE6F5"><b>9 Footer</b>3%</div>
+    </div>
+  </div>
+  <div>
+    <span class="kicker a">85 × 120 cm แนวตั้ง</span>
+    <h2 class="h-l a" style="--d:1">9 โซน เล่าเรื่องแบบ HCI</h2>
+    <div style="display:grid;gap:22px;margin-top:50px">
+      <p class="big a" style="--d:3"><span class="badge" style="background:var(--pink)">ชมพู</span> เข้าใจผู้ใช้และกระบวนการ</p>
+      <p class="big a" style="--d:4"><span class="badge" style="background:var(--lime)">เขียว</span> ผลงานและหลักฐานจากการทดสอบ</p>
+      <p class="big a" style="--d:5"><span class="badge" style="background:var(--yellow)">เหลือง</span> ชวนผู้ชมมีส่วนร่วม</p>
+      <p class="body a" style="--d:6;color:var(--soft)">ข้อความรวมไม่เกิน ~600 คำ · เนื้อหา 28–36 pt · ชื่อผลงาน 110–150 pt</p>
+    </div>
+  </div>
+</section>
+
+<!-- anatomy -->
+<section class="slide" data-title="anatomy-1" style="padding-top:80px">
+  <span class="kicker a">เจาะลึก 9 โซนตามแนวทาง HCI</span>
+  <h2 class="a" style="--d:1;font-size:64px">โซน 1–3: บอกว่าใคร มีปัญหาอะไร</h2>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:30px;height:690px"><div class="acol pop" style="--d:2"><div class="hd" style="background:#EAE6F5"><span class="bn">1</span><div><h3>Header</h3><p>ชื่อผลงาน · ประโยคขายไอเดีย · ทีม</p></div></div><div class="bd"><p class="goal">🎯 ให้คนเดินผ่านรู้ภายใน 3 วินาทีว่าผลงานช่วยใคร ทำอะไร</p><ul><li>ชื่อผลงานไทย-อังกฤษ สั้น จำง่าย ออกเสียงง่าย</li><li>ประโยคขายไอเดีย ≤15 คำ: ช่วย [ใคร] ให้ [ผลลัพธ์] โดยไม่ต้อง [ความยุ่งยาก]</li><li>ชื่อทีม สถาบัน และหมวด UX/UI</li><li>ภาพหลักหรือมาสคอต 1 ภาพที่บอกอารมณ์ของผลงาน</li></ul><p class="hci"><b>หลัก HCI:</b> First impression และ recognition over recall: ผู้ชมต้องจำได้ทันทีโดยไม่ต้องอ่านรายละเอียด</p><p class="q"><b>กรรมการถาม:</b> "ผลงานนี้ช่วยใคร อธิบายใน 1 ประโยคได้ไหม"</p></div></div><div class="acol pop" style="--d:3"><div class="hd" style="background:#FF8AC6"><span class="bn">2</span><div><h3>ปัญหา</h3><p>Problem &amp; Context of use</p></div></div><div class="bd"><p class="goal">🎯 ทำให้ผู้ชมเชื่อว่าปัญหานี้มีจริงและสำคัญกับผู้ใช้กลุ่มนี้</p><ul><li>บริบทการใช้งาน: ใคร ทำอะไร ที่ไหน เมื่อไร</li><li>หลักฐาน 1 ตัวเลขที่สะดุดตา พร้อมแหล่งที่มา (ข้อมูลของทีมหรืองานวิจัย)</li><li>ผลกระทบถ้าไม่แก้ปัญหา</li><li>คำถาม How Might We 1 ข้อที่ทีมเลือก</li></ul><p class="hci"><b>หลัก HCI:</b> Context of use ตาม ISO 9241-210 และ problem framing: นิยามปัญหาจากมุมผู้ใช้ ไม่ใช่จากเทคโนโลยี</p><p class="q"><b>กรรมการถาม:</b> "รู้ได้อย่างไรว่าเป็นปัญหาจริงของผู้ใช้กลุ่มนี้"</p></div></div><div class="acol pop" style="--d:4"><div class="hd" style="background:#FF8AC6"><span class="bn">3</span><div><h3>รู้จักผู้ใช้</h3><p>User research · Persona · Insight</p></div></div><div class="bd"><p class="goal">🎯 แสดงว่าทีมเข้าใจผู้ใช้จากข้อมูลจริง ไม่ใช่จากการเดา</p><ul><li>วิธีวิจัยและจำนวนผู้เข้าร่วม เช่น สัมภาษณ์ 8 คน สังเกต 3 บ้าน</li><li>เกณฑ์การคัดเลือกผู้เข้าร่วม (อายุ ประสบการณ์ บริบท)</li><li>Persona ที่สังเคราะห์จากข้อมูล พร้อมคำพูดจริง 1 ประโยค</li><li>Key insight 3 ข้อในรูป ผู้ใช้... เพราะ... จึง...</li></ul><p class="hci"><b>หลัก HCI:</b> User research และ affinity diagram: insight ต้องมีหลักฐานโยงกลับไปหาข้อมูลดิบได้</p><p class="q"><b>กรรมการถาม:</b> "สัมภาษณ์กี่คน คัดเลือกอย่างไร และ insight ไหนที่ทำให้ทีมเปลี่ยนความคิด"</p></div></div></div>
+</section>
+
+<!-- anatomy -->
+<section class="slide" data-title="anatomy-4" style="padding-top:80px">
+  <span class="kicker a">เจาะลึก 9 โซนตามแนวทาง HCI</span>
+  <h2 class="a" style="--d:1;font-size:64px">โซน 4–6: พิสูจน์ด้วยกระบวนการและหลักฐาน</h2>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:30px;height:690px"><div class="acol pop" style="--d:2"><div class="hd" style="background:#FF8AC6"><span class="bn">4</span><div><h3>กระบวนการ HCI</h3><p>Design process · Iteration</p></div></div><div class="bd"><p class="goal">🎯 ให้เห็นว่าทางแก้มาจากกระบวนการที่เป็นเหตุเป็นผลและวนปรับจริง</p><ul><li>ขั้น Empathize → Define → Ideate → Prototype → Test พร้อมสิ่งที่ทำจริงในแต่ละขั้น</li><li>ชิ้นงานระหว่างทาง เช่น affinity map, Crazy 8s, wireframe</li><li>จำนวนรอบที่วนออกแบบ และสิ่งที่เปลี่ยนในแต่ละรอบ</li><li>ไอเดียที่ทิ้งไปและเหตุผล (ถ้ามีพื้นที่)</li></ul><p class="hci"><b>หลัก HCI:</b> Iterative, user-centred design (ISO 9241-210): เข้าใจบริบท → กำหนดความต้องการ → ออกแบบ → ประเมิน แล้ววนซ้ำ</p><p class="q"><b>กรรมการถาม:</b> "ไอเดียที่ทิ้งไปมีอะไร และทำไมถึงทิ้ง"</p></div></div><div class="acol pop" style="--d:3"><div class="hd" style="background:#C8F04A"><span class="bn">5</span><div><h3>แนวทางแก้ไข</h3><p>Solution · Key screens · Features</p></div></div><div class="bd"><p class="goal">🎯 โชว์ทางแก้ที่ชัด และพิสูจน์ว่าแต่ละฟีเจอร์ตอบ pain point จริง</p><ul><li>หน้าจอหลัก 3–4 จอจาก prototype จริง</li><li>callout ≤6 คำ ชี้ฟีเจอร์บนหน้าจอ</li><li>การจับคู่ pain point → ฟีเจอร์ ให้เห็นชัด</li><li>user flow ของงานหลัก 1 งาน</li></ul><p class="hci"><b>หลัก HCI:</b> Nielsen&#x27;s heuristics (visibility of system status, error prevention, recognition over recall) และ accessibility (WCAG)</p><p class="q"><b>กรรมการถาม:</b> "ฟีเจอร์ไหนสำคัญที่สุด และถ้าตัดเหลืออันเดียวจะเก็บอันไหน"</p></div></div><div class="acol pop" style="--d:4"><div class="hd" style="background:#C8F04A"><span class="bn">6</span><div><h3>ทดสอบกับผู้ใช้</h3><p>Usability testing · Metrics</p></div></div><div class="bd"><p class="goal">🎯 ให้หลักฐานเชิงตัวเลขว่าดีไซน์ใช้งานได้จริงกับผู้ใช้กลุ่มเป้าหมาย</p><ul><li>วิธีทดสอบ เช่น task-based + think-aloud และจำนวนผู้ทดสอบ (5–8 คนต่อรอบ)</li><li>ผู้ทดสอบเป็นกลุ่มเป้าหมายจริง</li><li>งาน (task) ที่ให้ทำ 3–4 งาน</li><li>ตัวชี้วัด: task success, time on task, errors, คะแนน SUS (เกิน 68 = ดีกว่าค่าเฉลี่ย)</li></ul><p class="hci"><b>หลัก HCI:</b> Usability metrics (effectiveness, efficiency, satisfaction ตาม ISO 9241-11) และ SUS</p><p class="q"><b>กรรมการถาม:</b> "ผู้ทดสอบเป็นกลุ่มเป้าหมายจริงไหม และสิ่งที่พบทำให้ดีไซน์เปลี่ยนอย่างไร"</p></div></div></div>
+</section>
+
+<!-- anatomy -->
+<section class="slide" data-title="anatomy-7" style="padding-top:80px">
+  <span class="kicker a">เจาะลึก 9 โซนตามแนวทาง HCI</span>
+  <h2 class="a" style="--d:1;font-size:64px">โซน 7–9: ชวนต่อยอดและโปร่งใส</h2>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:30px;height:690px"><div class="acol pop" style="--d:2"><div class="hd" style="background:#FFD43B"><span class="bn">7</span><div><h3>ก้าวต่อไป</h3><p>Limitations · Future work</p></div></div><div class="bd"><p class="goal">🎯 แสดงความเข้าใจข้อจำกัดของงาน และทิศทางที่จะพัฒนาต่ออย่างมีเหตุผล</p><ul><li>ข้อจำกัด 1 ข้อ เช่น จำนวนผู้ทดสอบ หรือทดสอบในห้องแทนสภาพจริง</li><li>แผนต่อ 2 ข้อที่เชื่อมกับผลทดสอบ</li><li>ผลกระทบที่คาดหวังถ้าพัฒนาต่อ</li></ul><p class="hci"><b>หลัก HCI:</b> Ecological validity: การทดสอบในสถานการณ์จริง (in-the-wild) เป็นก้าวถัดไปของงาน HCI</p><p class="q"><b>กรรมการถาม:</b> "ถ้ามีเวลาอีก 3 เดือนจะทำอะไรก่อน เพราะอะไร"</p></div></div><div class="acol pop" style="--d:3"><div class="hd" style="background:#FFD43B"><span class="bn">8</span><div><h3>Try it!</h3><p>Participatory zone</p></div></div><div class="bd"><p class="goal">🎯 ชวนผู้ชมลองใช้และให้ feedback ซึ่งเป็นข้อมูล testing รอบใหม่</p><ul><li>QR ไป prototype ที่สแกนได้จริงจากระยะ 1 เมตร</li><li>งานสั้น ๆ ให้ลองทำใน 30–60 วินาที</li><li>กิจกรรมเก็บความเห็น เช่น dot voting หรือ sticky note พร้อมคำถาม 1 ข้อ</li><li>แผนบันทึกและสรุป feedback หลังงาน</li></ul><p class="hci"><b>หลัก HCI:</b> Participatory design และการเก็บ feedback จากผู้ใช้จริงในสถานที่จริง</p><p class="q"><b>กรรมการถาม:</b> "จะเอา feedback จากวันนี้ไปใช้อย่างไร"</p></div></div><div class="acol pop" style="--d:4"><div class="hd" style="background:#EAE6F5"><span class="bn">9</span><div><h3>Footer</h3><p>Team · References · AI · Ethics</p></div></div><div class="bd"><p class="goal">🎯 ให้ความน่าเชื่อถือและความโปร่งใสของงาน</p><ul><li>สมาชิกทีมและบทบาท</li><li>ช่องทางติดต่อ</li><li>อ้างอิงที่ใช้จริง เช่น SUS (Brooke, 1996)</li><li>การระบุว่าใช้ AI ช่วยส่วนไหน</li></ul><p class="hci"><b>หลัก HCI:</b> Research ethics: informed consent และ privacy ของผู้เข้าร่วมวิจัย</p><p class="q"><b>กรรมการถาม:</b> "ผู้เข้าร่วมทุกคนยินยอมให้ใช้ข้อมูลไหม"</p></div></div></div>
+</section>
+
+<!-- 7 chain -->
+<section class="slide" data-title="hci-chain">
+  <span class="kicker a">หัวใจของโปสเตอร์ HCI</span>
+  <h2 class="h-l a" style="--d:1">ทุกอย่างต้องโยงกันเป็นเส้นเดียว</h2>
+  <div style="display:grid;grid-template-columns:1fr 120px 1fr 120px 1fr;align-items:center;margin-top:90px">
+    <div class="tile pop" style="--d:2;background:var(--pink)"><span class="badge" style="background:#fff">โซน 3</span><h3 style="font-size:52px;margin-top:20px">Pain point</h3><p class="body" style="margin-top:14px">"จำไม่ได้ว่ากินยาไปแล้วหรือยัง"</p></div>
+    <svg width="120" height="80" viewBox="0 0 120 80"><path class="draw" style="--len:140;--d:4" d="M10 40h90M80 18l24 22-24 22" fill="none" stroke="#17142B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="tile pop" style="--d:5;background:var(--lime)"><span class="badge" style="background:#fff">โซน 5</span><h3 style="font-size:52px;margin-top:20px">ฟีเจอร์</h3><p class="body" style="margin-top:14px">ปุ่มใหญ่ "กินแล้ว" + แจ้งลูกหลาน</p></div>
+    <svg width="120" height="80" viewBox="0 0 120 80"><path class="draw" style="--len:140;--d:7" d="M10 40h90M80 18l24 22-24 22" fill="none" stroke="#17142B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="tile pop" style="--d:8;background:var(--blue);color:#fff"><span class="badge" style="background:#fff;color:var(--ink)">โซน 6</span><h3 style="font-size:52px;margin-top:20px">หลักฐาน</h3><p class="body" style="margin-top:14px">ทำงานสำเร็จ 67% → 100% หลังปรับ</p></div>
+  </div>
+  <p class="body a" style="--d:9;margin-top:70px;color:var(--soft)">ตัวอย่างสมมติจากผลงาน "MediMate ยาเตือนใจ" · ฟีเจอร์ไหนไม่ได้แก้ pain point ให้ตัดออกจากโปสเตอร์</p>
+</section>
+
+<!-- example poster -->
+<section class="slide" data-title="example-poster" style="display:grid;grid-template-columns:660px 1fr;gap:80px;padding-top:70px;padding-bottom:60px">
+  <div class="pop" style="--d:0;width:660px;height:932px;position:relative"><div style="transform:scale(.776);transform-origin:0 0;position:absolute">
+<div class="pm" role="img" aria-label="ตัวอย่างโปสเตอร์สมมติ MediMate ยาเตือนใจ ขนาด 85x120 cm ครบ 9 โซน">
+  <div class="demo">ตัวอย่างสมมติเพื่อการสอน</div>
+  <div class="hd">
+    <div>
+      <div class="t1">MediMate ยาเตือนใจ</div>
+      <div class="t2">MediMate: A medication companion for older adults</div>
+      <div class="tag">ช่วยผู้สูงอายุกินยาตรงเวลา โดยไม่ต้องจำเอง และลูกหลานอุ่นใจ</div>
+      <div class="team"><span class="zn">1</span> ทีม Care Pixel · มหาวิทยาลัยตัวอย่าง · หมวด Health UX</div>
+    </div>
+    <div class="pic"><svg width="84" height="100" viewBox="0 0 200 240"><use href="#c-user"/></svg></div>
+  </div>
+
+  <div class="row2">
+    <div class="box pink">
+      <h3><span class="zn">2</span> ปัญหา</h3>
+      <div class="big">1 ใน 2</div>
+      <div>ของผู้สูงอายุที่ใช้ยาประจำ <b>จำไม่ได้ว่ากินยาแล้วหรือยัง</b> อย่างน้อยสัปดาห์ละครั้ง จึงกินซ้ำหรือข้ามมื้อ</div>
+      <div class="src">ที่มา: แบบสอบถามของทีม n = 40 (ข้อมูลสมมติ)</div>
+      <div class="hmw"><b>How might we</b> ช่วยให้ผู้สูงอายุรู้ว่ากินยาแล้วหรือยังในพริบตา และลูกหลานไม่ต้องโทรถามทุกวัน?</div>
+    </div>
+    <div class="box pinkbg">
+      <h3><span class="zn">3</span> รู้จักผู้ใช้</h3>
+      <div class="chips"><span class="chip">สัมภาษณ์เชิงลึก 8 คน · อายุ 62–78</span><span class="chip">สังเกตที่บ้าน 3 ครอบครัว</span><span class="chip">แบบสอบถาม 40 คน</span></div>
+      <div class="persona"><div class="av"><svg width="50" height="50" viewBox="40 34 120 120"><use href="#c-user"/></svg></div>
+        <div><b>ป้าสมใจ 68 ปี</b> · ยา 4 ชนิด วันละ 3 มื้อ · สายตายาว · ลูกทำงานกรุงเทพฯ<br><i>"กินไปแล้วหรือยังนะ จำไม่ได้ เลยไม่กล้ากินซ้ำ"</i></div></div>
+      <ul class="ins">
+        <li><span>1</span><div>ผู้ใช้ <b>ไม่ได้ลืมกิน แต่ลืมว่ากินแล้ว</b> เพราะทำซ้ำทุกวัน จึงต้องมีหลักฐานการกินที่เห็นทันที</div></li>
+        <li><span>2</span><div>แอปเตือนทั่วไป <b>ตัวเล็กและเมนูซ้อน</b> ผู้ใช้จึงเลิกใช้ภายในสัปดาห์แรก</div></li>
+        <li><span>3</span><div><b>เสียงคนในครอบครัว</b> ทำให้อยากทำตามมากกว่าเสียงเตือนทั่วไป</div></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="box pinkbg">
+    <h3><span class="zn">4</span> กระบวนการออกแบบ <span style="font-family:Anuphan,sans-serif;font-weight:400;font-size:12px">· วนออกแบบ 2 รอบ</span></h3>
+    <div class="proc">
+      <div class="step"><b>Empathize</b>สัมภาษณ์ 8 คน สังเกต 3 บ้าน</div>
+      <div class="step"><b>Define</b>Affinity map → Persona + HMW</div>
+      <div class="step"><b>Ideate</b>Crazy 8s ได้ 32 ไอเดีย โหวตเหลือ 3</div>
+      <div class="step"><b>Prototype</b>Paper → Figma 2 เวอร์ชัน</div>
+      <div class="step"><b>Test</b>Think-aloud 6 คน × 2 รอบ</div>
+    </div>
+  </div>
+
+  <div class="box lime sol">
+    <h3><span class="zn">5</span> แนวทางแก้ไขและฟีเจอร์หลัก</h3>
+    <div class="phones">
+      <div class="pcol">
+        <div class="ph"><div class="sb"><span>08:00</span><span>มื้อเช้า</span></div>
+          <div class="h">สวัสดีค่ะ ป้าสมใจ</div>
+          <div class="pill"><i style="background:#FF8AC6"></i>ยาความดัน 1 เม็ด</div>
+          <div class="pill"><i style="background:#FFD43B"></i>วิตามินบี 1 เม็ด</div>
+          <div class="pill"><i style="background:#57B8FF"></i>ยาเบาหวาน 1 เม็ด</div>
+          <div class="bigbtn"><small>✓</small>กินแล้ว</div>
+          <div style="font-size:9.5px;text-align:center;opacity:.7">ต่อไป: กลางวัน 12:00</div></div>
+        <div class="co"><span class="from">แก้ insight 1, 2</span><b>ปุ่มเดียว ขนาด 2 เท่า</b>กดแล้วบันทึกเวลาให้ทันที</div>
+      </div>
+      <div class="pcol">
+        <div class="ph"><div class="sb"><span>เพิ่มยา</span><span>✕</span></div>
+          <div class="h">สแกนซองยา</div>
+          <div class="cam"><div class="pk"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+          <div class="res"><b>ยาความดัน 5 mg</b><br>1 เม็ด หลังอาหารเช้า</div>
+          <div class="btn l">บันทึกยานี้</div></div>
+        <div class="co"><span class="from">แก้ insight 2</span><b>สแกนแทนการพิมพ์</b>ไม่ต้องพิมพ์ชื่อยาเอง</div>
+      </div>
+      <div class="pcol">
+        <div class="ph voice"><div class="sb"><span>12:00</span><span>เตือนกินยา</span></div>
+          <div class="vav">เมย์</div>
+          <div class="h" style="text-align:center">เสียงจากน้องเมย์</div>
+          <div class="wave"><i style="height:6px"></i><i style="height:12px"></i><i style="height:18px"></i><i style="height:9px"></i><i style="height:20px"></i><i style="height:13px"></i><i style="height:8px"></i><i style="height:16px"></i><i style="height:10px"></i><i style="height:19px"></i><i style="height:7px"></i><i style="height:12px"></i></div>
+          <div style="text-align:center">"แม่จ๋า ได้เวลากินยากลางวันแล้วนะ"</div>
+          <div class="btn" style="background:#fff;color:#17142B">ฟังอีกครั้ง</div>
+          <div class="btn l">กินแล้ว</div></div>
+        <div class="co"><span class="from">แก้ insight 3</span><b>เตือนด้วยเสียงลูกหลาน</b>อัดเสียงได้ครั้งละ 10 วินาที</div>
+      </div>
+      <div class="pcol">
+        <div class="ph"><div class="sb"><span>ครอบครัว</span><span>⚙</span></div>
+          <div class="h">แม่วันนี้</div>
+          <div class="tl"><div>เช้า 08:12 <span class="ok">✓</span></div><div>กลางวัน 12:20 <span class="ok">✓</span></div><div>เย็น 18:00 <span class="wait">รอ</span></div></div>
+          <div class="res" style="background:#FFF1A8">ถ้าเลยเวลา 30 นาที จะแจ้งเตือนคุณ</div>
+          <div class="btn">โทรหาแม่</div></div>
+        <div class="co"><span class="from">แก้ insight 1</span><b>ลูกหลานเห็นทันที</b>ไม่ต้องโทรถามทุกมื้อ</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row5">
+    <div class="box blue">
+      <h3><span class="zn">6</span> ทดสอบกับผู้ใช้</h3>
+      <div>Task-based usability test + think-aloud · ผู้สูงอายุ <b>6 คน</b> อายุ 63–75 · 4 งาน: บันทึกการกินยา, สแกนยาใหม่, ฟังเสียงเตือน, ดูประวัติ</div>
+      <div class="mets">
+        <div class="met"><div class="v"><s>58</s> → 81</div>คะแนน SUS<div class="bars"><div style="width:58%;background:#FF8AC6"></div><div style="width:81%;background:#C8F04A"></div></div></div>
+        <div class="met"><div class="v"><s>67%</s> → 100%</div>ทำงานสำเร็จ<div class="bars"><div style="width:67%;background:#FF8AC6"></div><div style="width:100%;background:#C8F04A"></div></div></div>
+        <div class="met"><div class="v"><s>24</s> → 6 วิ</div>เวลาบันทึกการกินยา<div class="bars"><div style="width:100%;background:#FF8AC6"></div><div style="width:25%;background:#C8F04A"></div></div></div>
+      </div>
+      <div class="ba"><div><b>Before → After 1:</b> ปุ่มกินแล้วเล็กและอยู่ล่างจอ → ขยาย 2 เท่า ย้ายมากลางจอ</div><div><b>Before → After 2:</b> เมนูซ้อน 3 ชั้น → เหลือ 1 ชั้น ทุกอย่างอยู่หน้าเดียว</div></div>
+    </div>
+    <div class="side">
+      <div class="box yellow" style="font-size:11px"><h3><span class="zn">7</span> ก้าวต่อไป</h3><b>ข้อจำกัด:</b> ทดสอบ 6 คนในเขตเมือง<br><b>ต่อไป:</b> ทดสอบภาคสนาม 2 สัปดาห์ · เชื่อมกับ รพ.สต.</div>
+      <div class="box orange"><h3><span class="zn">8</span> Try it!</h3>
+        <div class="try"><div style="border:3px solid #17142B;border-radius:10px;overflow:hidden;width:66px;height:66px"><svg width="60" height="60" viewBox="0 0 60 60" aria-hidden="true"><rect width="60" height="60" fill="#fff"/><rect x="0.0" y="0.0" width="20.0" height="20.0" fill="#17142B"/><rect x="2.857142857142857" y="2.857142857142857" width="14.285714285714286" height="14.285714285714286" fill="#fff"/><rect x="5.714285714285714" y="5.714285714285714" width="8.571428571428571" height="8.571428571428571" fill="#17142B"/><rect x="40.0" y="0.0" width="20.0" height="20.0" fill="#17142B"/><rect x="42.85714285714286" y="2.857142857142857" width="14.285714285714286" height="14.285714285714286" fill="#fff"/><rect x="45.714285714285715" y="5.714285714285714" width="8.571428571428571" height="8.571428571428571" fill="#17142B"/><rect x="0.0" y="40.0" width="20.0" height="20.0" fill="#17142B"/><rect x="2.857142857142857" y="42.85714285714286" width="14.285714285714286" height="14.285714285714286" fill="#fff"/><rect x="5.714285714285714" y="45.714285714285715" width="8.571428571428571" height="8.571428571428571" fill="#17142B"/><rect x="22.86" y="0.00" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="0.00" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="0.00" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="2.86" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="2.86" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="2.86" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="2.86" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="5.71" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="5.71" width="2.86" height="2.86" fill="#17142B"/><rect x="28.57" y="5.71" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="5.71" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="8.57" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="8.57" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="11.43" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="11.43" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="11.43" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="14.29" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="14.29" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="14.29" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="17.14" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="17.14" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="17.14" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="20.00" width="2.86" height="2.86" fill="#17142B"/><rect x="28.57" y="20.00" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="20.00" width="2.86" height="2.86" fill="#17142B"/><rect x="0.00" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="2.86" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="11.43" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="45.71" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="0.00" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="11.43" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="20.00" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="54.29" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="57.14" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="0.00" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="5.71" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="8.57" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="11.43" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="17.14" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="20.00" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="54.29" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="57.14" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="0.00" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="5.71" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="8.57" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="11.43" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="14.29" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="54.29" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="0.00" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="2.86" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="5.71" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="8.57" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="11.43" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="14.29" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="17.14" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="20.00" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="28.57" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="45.71" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="57.14" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="28.57" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="57.14" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="40.00" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="40.00" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="40.00" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="40.00" width="2.86" height="2.86" fill="#17142B"/><rect x="54.29" y="40.00" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="42.86" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="42.86" width="2.86" height="2.86" fill="#17142B"/><rect x="45.71" y="42.86" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="42.86" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="42.86" width="2.86" height="2.86" fill="#17142B"/><rect x="54.29" y="42.86" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="45.71" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="45.71" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="45.71" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="45.71" width="2.86" height="2.86" fill="#17142B"/><rect x="45.71" y="45.71" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="45.71" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="48.57" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="48.57" width="2.86" height="2.86" fill="#17142B"/><rect x="45.71" y="48.57" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="48.57" width="2.86" height="2.86" fill="#17142B"/><rect x="54.29" y="48.57" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="51.43" width="2.86" height="2.86" fill="#17142B"/><rect x="28.57" y="51.43" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="51.43" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="51.43" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="51.43" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="51.43" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="54.29" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="54.29" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="54.29" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="54.29" width="2.86" height="2.86" fill="#17142B"/><rect x="57.14" y="54.29" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="28.57" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="45.71" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="57.14" y="57.14" width="2.86" height="2.86" fill="#17142B"/></svg></div>
+          <div><b style="font-size:11px">สแกนแล้วลองกด "กินแล้ว" ใน 10 วิ</b><div style="font-size:10px">โหวต: ฟีเจอร์ที่อยากได้ที่บ้าน</div>
+            <div class="vote"><div>เตือนด้วยเสียงลูก <span><i style="background:#C8F04A"></i><i style="background:#C8F04A"></i><i style="background:#C8F04A"></i></span></div><div>สแกนซองยา <span><i style="background:#FFD43B"></i><i style="background:#FFD43B"></i></span></div><div>แจ้งลูกหลาน <span><i style="background:#FF8AC6"></i><i style="background:#FF8AC6"></i><i style="background:#FF8AC6"></i><i style="background:#FF8AC6"></i></span></div></div>
+          </div></div></div>
+    </div>
+  </div>
+
+  <div class="ft">
+    <div><span class="zn">9</span> <b>ทีม Care Pixel</b> · นักวิจัย UX · UI designer · Prototyper<br>ติดต่อ carepixel@example.com</div>
+    <div><b>อ้างอิง</b> Brooke (1996) SUS · Nielsen (2000) Why you only need to test with 5 users · ISO 9241-210</div>
+    <div><b>ใช้ AI</b> Claude ช่วยสรุปบทสัมภาษณ์และเรียบเรียงข้อความ · AI สร้างภาพพื้นหลัง · ผู้เข้าร่วมทุกคนยินยอม และข้อมูลถูกปกปิดชื่อ</div>
+  </div>
+</div></div></div>
+  <div>
+    <span class="kicker a">ตัวอย่างสมมติเพื่อการสอน</span>
+    <h2 class="a" style="--d:1;font-size:76px;line-height:1.15">โปสเตอร์ MediMate<br>กรอกครบ 9 โซน</h2>
+    <p class="body a" style="--d:2;color:var(--soft);margin-top:16px">สัดส่วนจริง 85×120 cm · ตัวเลขทั้งหมดแต่งขึ้น</p>
+    <div style="display:grid;gap:14px;margin-top:34px"><div class="pop" style="--d:3;display:flex;gap:18px;align-items:center;background:#fff;border:4px solid var(--ink);border-radius:24px;padding:14px 20px"><span class="blobnum" style="width:62px;height:62px;font-size:34px;background:var(--lime);flex:none">2</span><span style="font-size:30px">ตัวเลขใหญ่ + ที่มา + HMW</span></div><div class="pop" style="--d:4;display:flex;gap:18px;align-items:center;background:#fff;border:4px solid var(--ink);border-radius:24px;padding:14px 20px"><span class="blobnum" style="width:62px;height:62px;font-size:34px;background:var(--lime);flex:none">3</span><span style="font-size:30px">วิธีวิจัย จำนวนคน Persona insight</span></div><div class="pop" style="--d:5;display:flex;gap:18px;align-items:center;background:#fff;border:4px solid var(--ink);border-radius:24px;padding:14px 20px"><span class="blobnum" style="width:62px;height:62px;font-size:34px;background:var(--lime);flex:none">5</span><span style="font-size:30px">หน้าจอจริง + ป้ายแก้ insight</span></div><div class="pop" style="--d:6;display:flex;gap:18px;align-items:center;background:#fff;border:4px solid var(--ink);border-radius:24px;padding:14px 20px"><span class="blobnum" style="width:62px;height:62px;font-size:34px;background:var(--lime);flex:none">6</span><span style="font-size:30px">n ตัวชี้วัดก่อน/หลัง Before → After</span></div><div class="pop" style="--d:7;display:flex;gap:18px;align-items:center;background:#fff;border:4px solid var(--ink);border-radius:24px;padding:14px 20px"><span class="blobnum" style="width:62px;height:62px;font-size:34px;background:var(--lime);flex:none">8</span><span style="font-size:30px">QR + งาน 10 วิ + โหวต</span></div></div>
+  </div>
+</section>
+
+<!-- zoom UI -->
+<section class="slide" data-title="example-ui">
+  <span class="kicker a">ซูมดูโซน 5</span>
+  <h2 class="a" style="--d:1;font-size:64px">ทุกหน้าจอต้องตอบ insight ข้อใดข้อหนึ่ง</h2>
+  <div class="pzoom">
+<div class="pm" role="img" aria-label="ตัวอย่างโปสเตอร์สมมติ MediMate ยาเตือนใจ ขนาด 85x120 cm ครบ 9 โซน">
+  <div class="demo">ตัวอย่างสมมติเพื่อการสอน</div>
+  <div class="hd">
+    <div>
+      <div class="t1">MediMate ยาเตือนใจ</div>
+      <div class="t2">MediMate: A medication companion for older adults</div>
+      <div class="tag">ช่วยผู้สูงอายุกินยาตรงเวลา โดยไม่ต้องจำเอง และลูกหลานอุ่นใจ</div>
+      <div class="team"><span class="zn">1</span> ทีม Care Pixel · มหาวิทยาลัยตัวอย่าง · หมวด Health UX</div>
+    </div>
+    <div class="pic"><svg width="84" height="100" viewBox="0 0 200 240"><use href="#c-user"/></svg></div>
+  </div>
+
+  <div class="row2">
+    <div class="box pink">
+      <h3><span class="zn">2</span> ปัญหา</h3>
+      <div class="big">1 ใน 2</div>
+      <div>ของผู้สูงอายุที่ใช้ยาประจำ <b>จำไม่ได้ว่ากินยาแล้วหรือยัง</b> อย่างน้อยสัปดาห์ละครั้ง จึงกินซ้ำหรือข้ามมื้อ</div>
+      <div class="src">ที่มา: แบบสอบถามของทีม n = 40 (ข้อมูลสมมติ)</div>
+      <div class="hmw"><b>How might we</b> ช่วยให้ผู้สูงอายุรู้ว่ากินยาแล้วหรือยังในพริบตา และลูกหลานไม่ต้องโทรถามทุกวัน?</div>
+    </div>
+    <div class="box pinkbg">
+      <h3><span class="zn">3</span> รู้จักผู้ใช้</h3>
+      <div class="chips"><span class="chip">สัมภาษณ์เชิงลึก 8 คน · อายุ 62–78</span><span class="chip">สังเกตที่บ้าน 3 ครอบครัว</span><span class="chip">แบบสอบถาม 40 คน</span></div>
+      <div class="persona"><div class="av"><svg width="50" height="50" viewBox="40 34 120 120"><use href="#c-user"/></svg></div>
+        <div><b>ป้าสมใจ 68 ปี</b> · ยา 4 ชนิด วันละ 3 มื้อ · สายตายาว · ลูกทำงานกรุงเทพฯ<br><i>"กินไปแล้วหรือยังนะ จำไม่ได้ เลยไม่กล้ากินซ้ำ"</i></div></div>
+      <ul class="ins">
+        <li><span>1</span><div>ผู้ใช้ <b>ไม่ได้ลืมกิน แต่ลืมว่ากินแล้ว</b> เพราะทำซ้ำทุกวัน จึงต้องมีหลักฐานการกินที่เห็นทันที</div></li>
+        <li><span>2</span><div>แอปเตือนทั่วไป <b>ตัวเล็กและเมนูซ้อน</b> ผู้ใช้จึงเลิกใช้ภายในสัปดาห์แรก</div></li>
+        <li><span>3</span><div><b>เสียงคนในครอบครัว</b> ทำให้อยากทำตามมากกว่าเสียงเตือนทั่วไป</div></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="box pinkbg">
+    <h3><span class="zn">4</span> กระบวนการออกแบบ <span style="font-family:Anuphan,sans-serif;font-weight:400;font-size:12px">· วนออกแบบ 2 รอบ</span></h3>
+    <div class="proc">
+      <div class="step"><b>Empathize</b>สัมภาษณ์ 8 คน สังเกต 3 บ้าน</div>
+      <div class="step"><b>Define</b>Affinity map → Persona + HMW</div>
+      <div class="step"><b>Ideate</b>Crazy 8s ได้ 32 ไอเดีย โหวตเหลือ 3</div>
+      <div class="step"><b>Prototype</b>Paper → Figma 2 เวอร์ชัน</div>
+      <div class="step"><b>Test</b>Think-aloud 6 คน × 2 รอบ</div>
+    </div>
+  </div>
+
+  <div class="box lime sol">
+    <h3><span class="zn">5</span> แนวทางแก้ไขและฟีเจอร์หลัก</h3>
+    <div class="phones">
+      <div class="pcol">
+        <div class="ph"><div class="sb"><span>08:00</span><span>มื้อเช้า</span></div>
+          <div class="h">สวัสดีค่ะ ป้าสมใจ</div>
+          <div class="pill"><i style="background:#FF8AC6"></i>ยาความดัน 1 เม็ด</div>
+          <div class="pill"><i style="background:#FFD43B"></i>วิตามินบี 1 เม็ด</div>
+          <div class="pill"><i style="background:#57B8FF"></i>ยาเบาหวาน 1 เม็ด</div>
+          <div class="bigbtn"><small>✓</small>กินแล้ว</div>
+          <div style="font-size:9.5px;text-align:center;opacity:.7">ต่อไป: กลางวัน 12:00</div></div>
+        <div class="co"><span class="from">แก้ insight 1, 2</span><b>ปุ่มเดียว ขนาด 2 เท่า</b>กดแล้วบันทึกเวลาให้ทันที</div>
+      </div>
+      <div class="pcol">
+        <div class="ph"><div class="sb"><span>เพิ่มยา</span><span>✕</span></div>
+          <div class="h">สแกนซองยา</div>
+          <div class="cam"><div class="pk"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+          <div class="res"><b>ยาความดัน 5 mg</b><br>1 เม็ด หลังอาหารเช้า</div>
+          <div class="btn l">บันทึกยานี้</div></div>
+        <div class="co"><span class="from">แก้ insight 2</span><b>สแกนแทนการพิมพ์</b>ไม่ต้องพิมพ์ชื่อยาเอง</div>
+      </div>
+      <div class="pcol">
+        <div class="ph voice"><div class="sb"><span>12:00</span><span>เตือนกินยา</span></div>
+          <div class="vav">เมย์</div>
+          <div class="h" style="text-align:center">เสียงจากน้องเมย์</div>
+          <div class="wave"><i style="height:6px"></i><i style="height:12px"></i><i style="height:18px"></i><i style="height:9px"></i><i style="height:20px"></i><i style="height:13px"></i><i style="height:8px"></i><i style="height:16px"></i><i style="height:10px"></i><i style="height:19px"></i><i style="height:7px"></i><i style="height:12px"></i></div>
+          <div style="text-align:center">"แม่จ๋า ได้เวลากินยากลางวันแล้วนะ"</div>
+          <div class="btn" style="background:#fff;color:#17142B">ฟังอีกครั้ง</div>
+          <div class="btn l">กินแล้ว</div></div>
+        <div class="co"><span class="from">แก้ insight 3</span><b>เตือนด้วยเสียงลูกหลาน</b>อัดเสียงได้ครั้งละ 10 วินาที</div>
+      </div>
+      <div class="pcol">
+        <div class="ph"><div class="sb"><span>ครอบครัว</span><span>⚙</span></div>
+          <div class="h">แม่วันนี้</div>
+          <div class="tl"><div>เช้า 08:12 <span class="ok">✓</span></div><div>กลางวัน 12:20 <span class="ok">✓</span></div><div>เย็น 18:00 <span class="wait">รอ</span></div></div>
+          <div class="res" style="background:#FFF1A8">ถ้าเลยเวลา 30 นาที จะแจ้งเตือนคุณ</div>
+          <div class="btn">โทรหาแม่</div></div>
+        <div class="co"><span class="from">แก้ insight 1</span><b>ลูกหลานเห็นทันที</b>ไม่ต้องโทรถามทุกมื้อ</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row5">
+    <div class="box blue">
+      <h3><span class="zn">6</span> ทดสอบกับผู้ใช้</h3>
+      <div>Task-based usability test + think-aloud · ผู้สูงอายุ <b>6 คน</b> อายุ 63–75 · 4 งาน: บันทึกการกินยา, สแกนยาใหม่, ฟังเสียงเตือน, ดูประวัติ</div>
+      <div class="mets">
+        <div class="met"><div class="v"><s>58</s> → 81</div>คะแนน SUS<div class="bars"><div style="width:58%;background:#FF8AC6"></div><div style="width:81%;background:#C8F04A"></div></div></div>
+        <div class="met"><div class="v"><s>67%</s> → 100%</div>ทำงานสำเร็จ<div class="bars"><div style="width:67%;background:#FF8AC6"></div><div style="width:100%;background:#C8F04A"></div></div></div>
+        <div class="met"><div class="v"><s>24</s> → 6 วิ</div>เวลาบันทึกการกินยา<div class="bars"><div style="width:100%;background:#FF8AC6"></div><div style="width:25%;background:#C8F04A"></div></div></div>
+      </div>
+      <div class="ba"><div><b>Before → After 1:</b> ปุ่มกินแล้วเล็กและอยู่ล่างจอ → ขยาย 2 เท่า ย้ายมากลางจอ</div><div><b>Before → After 2:</b> เมนูซ้อน 3 ชั้น → เหลือ 1 ชั้น ทุกอย่างอยู่หน้าเดียว</div></div>
+    </div>
+    <div class="side">
+      <div class="box yellow" style="font-size:11px"><h3><span class="zn">7</span> ก้าวต่อไป</h3><b>ข้อจำกัด:</b> ทดสอบ 6 คนในเขตเมือง<br><b>ต่อไป:</b> ทดสอบภาคสนาม 2 สัปดาห์ · เชื่อมกับ รพ.สต.</div>
+      <div class="box orange"><h3><span class="zn">8</span> Try it!</h3>
+        <div class="try"><div style="border:3px solid #17142B;border-radius:10px;overflow:hidden;width:66px;height:66px"><svg width="60" height="60" viewBox="0 0 60 60" aria-hidden="true"><rect width="60" height="60" fill="#fff"/><rect x="0.0" y="0.0" width="20.0" height="20.0" fill="#17142B"/><rect x="2.857142857142857" y="2.857142857142857" width="14.285714285714286" height="14.285714285714286" fill="#fff"/><rect x="5.714285714285714" y="5.714285714285714" width="8.571428571428571" height="8.571428571428571" fill="#17142B"/><rect x="40.0" y="0.0" width="20.0" height="20.0" fill="#17142B"/><rect x="42.85714285714286" y="2.857142857142857" width="14.285714285714286" height="14.285714285714286" fill="#fff"/><rect x="45.714285714285715" y="5.714285714285714" width="8.571428571428571" height="8.571428571428571" fill="#17142B"/><rect x="0.0" y="40.0" width="20.0" height="20.0" fill="#17142B"/><rect x="2.857142857142857" y="42.85714285714286" width="14.285714285714286" height="14.285714285714286" fill="#fff"/><rect x="5.714285714285714" y="45.714285714285715" width="8.571428571428571" height="8.571428571428571" fill="#17142B"/><rect x="22.86" y="0.00" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="0.00" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="0.00" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="2.86" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="2.86" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="2.86" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="2.86" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="5.71" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="5.71" width="2.86" height="2.86" fill="#17142B"/><rect x="28.57" y="5.71" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="5.71" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="8.57" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="8.57" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="11.43" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="11.43" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="11.43" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="14.29" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="14.29" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="14.29" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="17.14" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="17.14" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="17.14" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="20.00" width="2.86" height="2.86" fill="#17142B"/><rect x="28.57" y="20.00" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="20.00" width="2.86" height="2.86" fill="#17142B"/><rect x="0.00" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="2.86" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="11.43" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="45.71" y="22.86" width="2.86" height="2.86" fill="#17142B"/><rect x="0.00" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="11.43" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="20.00" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="54.29" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="57.14" y="25.71" width="2.86" height="2.86" fill="#17142B"/><rect x="0.00" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="5.71" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="8.57" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="11.43" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="17.14" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="20.00" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="54.29" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="57.14" y="28.57" width="2.86" height="2.86" fill="#17142B"/><rect x="0.00" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="5.71" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="8.57" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="11.43" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="14.29" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="54.29" y="31.43" width="2.86" height="2.86" fill="#17142B"/><rect x="0.00" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="2.86" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="5.71" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="8.57" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="11.43" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="14.29" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="17.14" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="20.00" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="28.57" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="45.71" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="57.14" y="34.29" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="28.57" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="57.14" y="37.14" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="40.00" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="40.00" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="40.00" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="40.00" width="2.86" height="2.86" fill="#17142B"/><rect x="54.29" y="40.00" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="42.86" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="42.86" width="2.86" height="2.86" fill="#17142B"/><rect x="45.71" y="42.86" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="42.86" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="42.86" width="2.86" height="2.86" fill="#17142B"/><rect x="54.29" y="42.86" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="45.71" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="45.71" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="45.71" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="45.71" width="2.86" height="2.86" fill="#17142B"/><rect x="45.71" y="45.71" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="45.71" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="48.57" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="48.57" width="2.86" height="2.86" fill="#17142B"/><rect x="45.71" y="48.57" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="48.57" width="2.86" height="2.86" fill="#17142B"/><rect x="54.29" y="48.57" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="51.43" width="2.86" height="2.86" fill="#17142B"/><rect x="28.57" y="51.43" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="51.43" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="51.43" width="2.86" height="2.86" fill="#17142B"/><rect x="42.86" y="51.43" width="2.86" height="2.86" fill="#17142B"/><rect x="51.43" y="51.43" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="54.29" width="2.86" height="2.86" fill="#17142B"/><rect x="31.43" y="54.29" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="54.29" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="54.29" width="2.86" height="2.86" fill="#17142B"/><rect x="57.14" y="54.29" width="2.86" height="2.86" fill="#17142B"/><rect x="22.86" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="25.71" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="28.57" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="34.29" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="37.14" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="40.00" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="45.71" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="48.57" y="57.14" width="2.86" height="2.86" fill="#17142B"/><rect x="57.14" y="57.14" width="2.86" height="2.86" fill="#17142B"/></svg></div>
+          <div><b style="font-size:11px">สแกนแล้วลองกด "กินแล้ว" ใน 10 วิ</b><div style="font-size:10px">โหวต: ฟีเจอร์ที่อยากได้ที่บ้าน</div>
+            <div class="vote"><div>เตือนด้วยเสียงลูก <span><i style="background:#C8F04A"></i><i style="background:#C8F04A"></i><i style="background:#C8F04A"></i></span></div><div>สแกนซองยา <span><i style="background:#FFD43B"></i><i style="background:#FFD43B"></i></span></div><div>แจ้งลูกหลาน <span><i style="background:#FF8AC6"></i><i style="background:#FF8AC6"></i><i style="background:#FF8AC6"></i><i style="background:#FF8AC6"></i></span></div></div>
+          </div></div></div>
+    </div>
+  </div>
+
+  <div class="ft">
+    <div><span class="zn">9</span> <b>ทีม Care Pixel</b> · นักวิจัย UX · UI designer · Prototyper<br>ติดต่อ carepixel@example.com</div>
+    <div><b>อ้างอิง</b> Brooke (1996) SUS · Nielsen (2000) Why you only need to test with 5 users · ISO 9241-210</div>
+    <div><b>ใช้ AI</b> Claude ช่วยสรุปบทสัมภาษณ์และเรียบเรียงข้อความ · AI สร้างภาพพื้นหลัง · ผู้เข้าร่วมทุกคนยินยอม และข้อมูลถูกปกปิดชื่อ</div>
+  </div>
+</div></div>
+</section>
+
+<!-- 8 divider 2 -->
+<section class="slide bg-pink divider" data-title="part-2">
+  <div class="blobnum pop" style="--d:0">2</div>
+  <div><span class="kicker a" style="--d:1">Part 2</span><h2 class="a" style="--d:2;font-size:120px">ติ่ง × คนนอกด้อม</h2><p class="big a" style="--d:3;margin-top:24px">ใช้ AI ตัวเดียวให้เล่นสองบท</p></div>
+</section>
+
+<!-- 9 compare -->
+<section class="slide" data-title="fan-vs-outsider">
+  <div style="display:grid;grid-template-columns:1fr 220px 1fr;gap:30px;align-items:center;height:100%">
+    <div class="tile pop" style="--d:0;background:var(--pink);height:780px;display:flex;flex-direction:column;gap:22px">
+      <svg class="mascot bob frame" width="200" height="200" viewBox="20 10 160 160"><use href="#c-fan"/></svg>
+      <h2 style="font-size:84px">ติ่ง</h2>
+      <p class="big">แชทหลัก แนบไฟล์ผลการศึกษา รู้จักงานเราทุกซอกทุกมุม</p>
+      <p class="body">ใช้: ร่างเนื้อหา · ตรวจตัวเลข · เขียนสคริปต์</p>
+      <p class="small" style="background:rgba(255,255,255,.6);border-radius:20px;padding:14px 20px">จุดอ่อน: อินจัด มองไม่เห็นว่าคนอื่นงงตรงไหน</p>
+    </div>
+    <div class="pop spin" style="--d:2;width:220px;height:220px;border-radius:50%;background:var(--lime);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:90px">vs</div>
+    <div class="tile pop" style="--d:1;background:var(--blue);color:#fff;height:780px;display:flex;flex-direction:column;gap:22px">
+      <svg class="mascot bob2 frame" width="200" height="200" viewBox="20 10 160 160"><use href="#c-out"/></svg>
+      <h2 style="font-size:84px">คนนอกด้อม</h2>
+      <p class="big">แชทใหม่ ไม่แนบไฟล์ เห็นแค่โปสเตอร์ เหมือนผู้ชมและกรรมการ</p>
+      <p class="body">ใช้: เทส 30 วินาที · รีวิว · ตั้งคำถามโหด</p>
+      <p class="small" style="background:rgba(255,255,255,.92);color:var(--ink);border-radius:20px;padding:14px 20px">ดัดแปลงจาก Elephant–Goldfish Model ของ Google</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10 loop -->
+<section class="slide" data-title="loop">
+  <span class="kicker a">วงจรที่ใช้ทั้งงาน</span>
+  <h2 class="h-l a" style="--d:1">ติ่งสร้าง คนนอกด้อมตรวจ</h2>
+  <svg width="1660" height="560" viewBox="0 0 1660 560" style="margin-top:50px">
+    <g class="pop" style="--d:2"><rect x="0" y="60" width="360" height="190" rx="40" fill="#FF8AC6"/><text x="180" y="140" text-anchor="middle" font-family="Mitr" font-size="44" font-weight="600" fill="#17142B">1 ติ่งร่าง</text><text x="180" y="200" text-anchor="middle" font-family="Anuphan" font-size="30" fill="#17142B">แชทหลัก + ไฟล์</text></g>
+    <path class="draw" style="--len:120;--d:3" d="M370 155h70M420 130l26 25-26 25" fill="none" stroke="#17142B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <g class="pop" style="--d:4"><rect x="450" y="60" width="360" height="190" rx="40" fill="#3E68FF"/><text x="630" y="140" text-anchor="middle" font-family="Mitr" font-size="44" font-weight="600" fill="#fff">2 คนนอกด้อม</text><text x="630" y="200" text-anchor="middle" font-family="Anuphan" font-size="30" fill="#fff">แชทใหม่ ไม่มีไฟล์</text></g>
+    <path class="draw" style="--len:120;--d:5" d="M820 155h70M870 130l26 25-26 25" fill="none" stroke="#17142B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <g class="pop" style="--d:6"><rect x="900" y="60" width="360" height="190" rx="40" fill="#FFD43B"/><text x="1080" y="140" text-anchor="middle" font-family="Mitr" font-size="44" font-weight="600" fill="#17142B">3 เทียบ</text><text x="1080" y="200" text-anchor="middle" font-family="Anuphan" font-size="30" fill="#17142B">ตรงกับที่ตั้งใจไหม</text></g>
+    <path class="draw" style="--len:120;--d:7" d="M1270 155h70M1320 130l26 25-26 25" fill="none" stroke="#17142B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <g class="pop" style="--d:8"><rect x="1350" y="60" width="300" height="190" rx="40" fill="#FF8AC6"/><text x="1500" y="140" text-anchor="middle" font-family="Mitr" font-size="44" font-weight="600" fill="#17142B">4 แก้</text><text x="1500" y="200" text-anchor="middle" font-family="Anuphan" font-size="30" fill="#17142B">กลับไปที่ติ่ง</text></g>
+    <path class="draw" style="--len:1400;--d:9" d="M1500 262v120q0 60-60 60H690q-60 0-60-60v-110" fill="none" stroke="#6B4BF2" stroke-width="10" stroke-linecap="round" stroke-dasharray="1400"/>
+    <path class="pop" style="--d:12" d="M606 296l24-30 24 30" fill="none" stroke="#6B4BF2" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <text class="pop" style="--d:12" x="1065" y="510" text-anchor="middle" font-family="Mitr" font-size="38" font-weight="500" fill="#6B4BF2">เปิดแชทใหม่ทุกครั้ง ให้คนนอกด้อมคนใหม่อ่าน</text>
+  </svg>
+</section>
+
+<!-- 11 formula -->
+<section class="slide" data-title="formula">
+  <span class="kicker a">สูตรเขียน prompt</span>
+  <h2 class="h-l a" style="--d:1">5 ช่องที่ prompt ดีต้องมี</h2>
+  <svg class="mascot bob pop" style="--d:7;position:absolute;right:140px;top:60px" width="220" height="264"><use href="#c-prompt"/></svg>
+  <div class="grid5" style="margin-top:80px">
+    <div class="tile pop" style="--d:2;background:var(--lime)"><div style="font-family:var(--display);font-weight:800;font-size:110px;line-height:1">1</div><h3 style="font-size:48px;margin-top:16px">บทบาท</h3><p class="small" style="margin-top:10px">ให้ AI เป็นใคร</p></div>
+    <div class="tile pop" style="--d:3;background:var(--yellow)"><div style="font-family:var(--display);font-weight:800;font-size:110px;line-height:1">2</div><h3 style="font-size:48px;margin-top:16px">บริบท</h3><p class="small" style="margin-top:10px">ผลงานอะไร ช่วยใคร แนบอะไร</p></div>
+    <div class="tile pop" style="--d:4;background:var(--orange);color:#fff"><div style="font-family:var(--display);font-weight:800;font-size:110px;line-height:1">3</div><h3 style="font-size:48px;margin-top:16px">งาน</h3><p class="small" style="margin-top:10px">ให้ทำอะไร ใช้คำกริยาชัด</p></div>
+    <div class="tile pop" style="--d:5;background:var(--pink)"><div style="font-family:var(--display);font-weight:800;font-size:110px;line-height:1">4</div><h3 style="font-size:48px;margin-top:16px">กติกา</h3><p class="small" style="margin-top:10px">ห้ามแต่งข้อมูล จำกัดคำ</p></div>
+    <div class="tile pop" style="--d:6;background:var(--purple);color:#fff"><div style="font-family:var(--display);font-weight:800;font-size:110px;line-height:1">5</div><h3 style="font-size:48px;margin-top:16px">รูปแบบ</h3><p class="small" style="margin-top:10px">ตาราง bullet หรือสคริปต์</p></div>
+  </div>
+</section>
+
+<!-- 12 anatomy -->
+<section class="slide" data-title="prompt-anatomy" style="background:var(--pink-bg)">
+  <span class="kicker a">ผ่า prompt แรกของแชทหลัก</span>
+  <div style="display:flex;gap:14px;margin:6px 0 34px" class="a" >
+    <span class="badge hl1">1 บทบาท</span><span class="badge hl2">2 บริบท</span><span class="badge hl3">3 งาน</span><span class="badge hl4">4 กติกา</span><span class="badge hl5">5 รูปแบบ</span>
+  </div>
+  <div class="prompt a" style="--d:2"><span class="hl1">คุณคือ UX researcher ที่ช่วยทีมนักศึกษาทำโปสเตอร์ UX/UI ขนาด 85x120 cm</span>
+<span class="hl2">ผลงานของเราชื่อ MediMate สำหรับผู้สูงอายุ ไฟล์ที่แนบคือผลการศึกษาของทีม</span>
+<span class="hl3">อ่านทั้งไฟล์ แล้วเช็กว่าข้อมูลพอสำหรับโปสเตอร์ 9 โซนไหม</span>
+<span class="hl5">ทำเป็นตาราง: โซน | ครบ / บางส่วน / ไม่มี | พบที่ไหน | ต้องหาเพิ่มอะไร</span>
+<span class="hl4">ใช้เฉพาะข้อมูลในไฟล์ ห้ามเดา ยังไม่ต้องเขียนเนื้อหาโปสเตอร์</span></div>
+  <svg class="mascot bob pop" style="--d:4;position:absolute;right:120px;bottom:150px" width="190" height="190"><use href="#c-fan"/></svg>
+</section>
+
+<!-- 13 divider 3 -->
+<section class="slide bg-yellow divider" data-title="part-3">
+  <div class="blobnum pop" style="--d:0">3</div>
+  <div><span class="kicker a" style="--d:1">Part 3</span><h2 class="a" style="--d:2;font-size:120px">Workflow 6 ขั้น<br>จากไฟล์สู่โปสเตอร์</h2></div>
+  <svg class="mascot bob pop" style="--d:3;position:absolute;right:120px;bottom:70px" width="250" height="300"><use href="#c-idea"/></svg>
+</section>
+
+<!-- 14 six steps -->
+<section class="slide" data-title="six-steps">
+  <span class="kicker a">Toolkit มี prompt ให้ทุกขั้น</span>
+  <h2 class="h-l a" style="--d:1">6 ขั้น ใครทำอะไร</h2>
+  <div class="grid6" style="margin-top:56px">
+    <div class="tile pop" style="--d:2;background:var(--lime);padding:34px"><span class="badge b-fan">ติ่ง</span><h3 style="font-size:46px;margin-top:16px">1 เช็กข้อมูล</h3><p class="small" style="margin-top:8px">ไฟล์พอสำหรับ 9 โซนไหม</p></div>
+    <div class="tile pop" style="--d:3;background:var(--yellow);padding:34px"><span class="badge b-fan">ติ่ง</span><h3 style="font-size:46px;margin-top:16px">2 ร่าง 9 โซน</h3><p class="small" style="margin-top:8px">ดึงจากไฟล์ ห้ามแต่ง</p></div>
+    <div class="tile pop" style="--d:4;background:var(--orange);color:#fff;padding:34px"><span class="badge b-fan">ติ่ง</span><h3 style="font-size:46px;margin-top:16px">3 ภาพและเลย์เอาต์</h3><p class="small" style="margin-top:8px">prompt สร้างภาพ + ผัง</p></div>
+    <div class="tile pop" style="--d:5;background:var(--blue);color:#fff;padding:34px"><span class="badge" style="background:#fff;color:var(--ink)">คนนอกด้อม</span><h3 style="font-size:46px;margin-top:16px">4 รีวิว</h3><p class="small" style="margin-top:8px">เทส 30 วิ + รีวิว 5 ด้าน</p></div>
+    <div class="tile pop" style="--d:6;background:var(--pink);padding:34px"><span class="badge" style="background:#fff">ติ่ง</span><h3 style="font-size:46px;margin-top:16px">5 พิช</h3><p class="small" style="margin-top:8px">สคริปต์ 60 วิ และ 3 นาที</p></div>
+    <div class="tile pop" style="--d:7;background:var(--purple);color:#fff;padding:34px"><span class="badge" style="background:#fff;color:var(--ink)">คนนอกด้อม</span><h3 style="font-size:46px;margin-top:16px">6 กรรมการ</h3><p class="small" style="margin-top:8px">ตั้งคำถาม + ซ้อมตอบ</p></div>
+  </div>
+</section>
+
+<!-- 15 30s test -->
+<section class="slide" data-title="30s-test" style="background:var(--blue-bg)">
+  <div style="display:flex;align-items:center;gap:24px"><span class="badge b-out a">คนนอกด้อม · แชทใหม่</span><span class="badge a" style="--d:1;background:#fff">แนบแค่ภาพโปสเตอร์</span></div>
+  <h2 class="h-l a" style="--d:1;margin-top:26px">เทส 30 วินาที</h2>
+  <div class="prompt a type" style="--d:2;margin-top:36px;max-width:1300px">คุณคือนักศึกษาที่เดินผ่านบูธ ไม่เคยรู้จักผลงานนี้มาก่อน
+มีเวลาดูโปสเตอร์ 30 วินาที แล้วตอบตามจริง:
+1) ผลงานนี้คืออะไร ช่วยใคร (1 ประโยค)
+2) อะไรสะดุดตาที่สุด
+3) ตรงไหนงงหรืออ่านไม่รู้เรื่อง
+4) จะหยุดดูต่อหรือเดินผ่าน เพราะอะไร</div>
+  <svg class="mascot bob pop" style="--d:4;position:absolute;right:130px;top:330px" width="300" height="300"><use href="#c-out"/></svg>
+  <p class="st pop" style="--d:6;position:absolute;right:110px;bottom:190px;background:var(--yellow);transform:rotate(-3deg);max-width:380px;border-radius:28px;font-size:26px">คำตอบข้อ 1 ต้องตรงกับประโยคขายไอเดียของทีม</p>
+</section>
+
+<!-- 16 ethics -->
+<section class="slide bg-ink" data-title="ethics">
+  <span class="kicker a" style="background:var(--lime);color:var(--ink)">กติกาที่ห้ามละเมิด</span>
+  <h2 class="a" style="--d:1;font-size:96px;line-height:1.2;max-width:1500px">AI ช่วยเรียบเรียง<br><span style="color:var(--lime)">ทีมรับผิดชอบความจริง</span></h2>
+  <div class="grid3" style="margin-top:80px">
+    <div class="tile pop" style="--d:3;background:var(--pink);color:var(--ink)"><h3 style="font-size:44px">ห้ามแต่งข้อมูล</h3><p class="small" style="margin-top:12px">ตัวเลข ผลทดสอบ คำพูดผู้ใช้ ต้องมาจากไฟล์ ตรวจด้วยตาตัวเองทุกตัว</p></div>
+    <div class="tile pop" style="--d:4;background:var(--yellow);color:var(--ink)"><h3 style="font-size:44px">ปกป้องผู้ให้ข้อมูล</h3><p class="small" style="margin-top:12px">ลบชื่อ เบอร์โทร รูปหน้าออกก่อนอัปโหลด</p></div>
+    <div class="tile pop" style="--d:5;background:var(--lime);color:var(--ink)"><h3 style="font-size:44px">บอกว่าใช้ AI</h3><p class="small" style="margin-top:12px">ระบุใน Footer ว่าเครื่องมือไหนช่วยส่วนไหน</p></div>
+  </div>
+</section>
+
+<!-- 17 divider 4 -->
+<section class="slide bg-orange divider" data-title="part-4">
+  <div class="blobnum pop" style="--d:0">4</div>
+  <div><span class="kicker a" style="--d:1">Part 4</span><h2 class="a" style="--d:2;font-size:120px">ภาพ · พิช · กรรมการ</h2></div>
+  <svg class="mascot bob pop" style="--d:3;position:absolute;right:120px;bottom:80px" width="260" height="240"><use href="#c-pres"/></svg>
+</section>
+
+<!-- 18 visual studio -->
+<section class="slide" data-title="visual-studio">
+  <span class="kicker a">Visual Studio</span>
+  <h2 class="h-m a" style="--d:1;font-size:72px">เลือกสไตล์ แล้วให้ AI สร้างกราฟิกที่ไม่ซ้ำใคร</h2>
+  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:22px;margin-top:46px">
+    <div class="pop" style="--d:2"><div class="swatch" style="background:var(--lime)"><div style="position:absolute;left:30px;top:40px;width:110px;height:110px;border-radius:50%;background:var(--pink)"></div><div style="position:absolute;right:20px;bottom:20px;width:120px;height:90px;border-radius:45px;background:var(--purple)"></div></div><h3 style="font-size:32px">Playful pop</h3></div>
+    <div class="pop" style="--d:3"><div class="swatch" style="background:#2B2A6B"><div style="position:absolute;inset:30px;border:6px solid #E8B64C;border-radius:8px;transform:rotate(45deg) scale(.7)"></div><div style="position:absolute;inset:70px;background:#C4553A;transform:rotate(45deg) scale(.6)"></div></div><h3 style="font-size:32px">ไทยร่วมสมัย</h3></div>
+    <div class="pop" style="--d:4"><div class="swatch" style="background:#F6F1E6"><div style="position:absolute;left:30px;top:30px;width:150px;height:150px;border-radius:50%;background:#FF5CA8;mix-blend-mode:multiply"></div><div style="position:absolute;left:100px;top:50px;width:150px;height:150px;border-radius:50%;background:#2AA6B8;mix-blend-mode:multiply"></div></div><h3 style="font-size:32px">Risograph</h3></div>
+    <div class="pop" style="--d:5"><div class="swatch" style="background:#111"><div style="position:absolute;left:50%;top:50%;width:140px;height:140px;transform:translate(-50%,-50%) rotate(45deg);border-radius:30px;background:radial-gradient(circle at 30% 30%,#fff,#9aa3b5 45%,#3E68FF 100%)"></div></div><h3 style="font-size:32px">Y2K chrome</h3></div>
+    <div class="pop" style="--d:6"><div class="swatch" style="background:#FDE6D8"><div style="position:absolute;left:40px;top:50px;width:120px;height:120px;border-radius:40px;background:#9EE6CF;box-shadow:inset -12px -14px 0 rgba(0,0,0,.08)"></div><div style="position:absolute;right:30px;bottom:30px;width:90px;height:90px;border-radius:50%;background:#C9B8FF;box-shadow:inset -10px -12px 0 rgba(0,0,0,.08)"></div></div><h3 style="font-size:32px">Clay 3D</h3></div>
+    <div class="pop" style="--d:7"><div class="swatch" style="background:#F3E9D2"><div style="position:absolute;left:-20px;right:-20px;bottom:-60px;height:170px;border-radius:50%;background:#E2B33C;box-shadow:0 -6px 0 rgba(0,0,0,.08)"></div><div style="position:absolute;left:-40px;right:-40px;bottom:-110px;height:170px;border-radius:50%;background:#2F6B4F;box-shadow:0 -6px 0 rgba(0,0,0,.1)"></div></div><h3 style="font-size:32px">Paper cut</h3></div>
+  </div>
+  <div class="white a" style="--d:8;margin-top:46px;font-size:32px;line-height:1.7">
+    <b style="font-family:var(--thai-display)">สูตร prompt ภาพ:</b> <span class="hl1">ชิ้นงาน</span> + <span class="hl2">เรื่องของผลงาน</span> + <span class="hl3">สไตล์</span> + <span class="hl4">ชุดสี</span> + <span class="hl5">พื้นที่ว่างสำหรับข้อความ</span> + <b>no text</b>
+    <p class="small" style="color:var(--soft);margin-top:8px">ภาษาไทยในภาพมักเพี้ยน ใส่ข้อความเองด้วยฟอนต์จริง · ห้ามใส่ชื่อศิลปินหรือแบรนด์</p>
+  </div>
+</section>
+
+<!-- 19 pitch timeline -->
+<section class="slide" data-title="pitch-60">
+  <span class="kicker a">สคริปต์พิช</span>
+  <h2 class="h-l a" style="--d:1">60 วินาที แบ่งแบบนี้</h2>
+  <div style="display:flex;height:150px;margin-top:90px;border-radius:30px;overflow:hidden">
+    <div class="grow" style="--d:0;flex:5;background:var(--purple)"></div>
+    <div class="grow" style="--d:1;flex:10;background:var(--pink)"></div>
+    <div class="grow" style="--d:2;flex:10;background:var(--yellow)"></div>
+    <div class="grow" style="--d:3;flex:15;background:var(--lime)"></div>
+    <div class="grow" style="--d:4;flex:15;background:var(--blue)"></div>
+    <div class="grow" style="--d:5;flex:5;background:var(--orange)"></div>
+  </div>
+  <div style="display:flex;margin-top:28px">
+    <div class="a" style="--d:2;flex:5"><h3 style="font-size:34px">Hook</h3><p class="small">5 วิ</p></div>
+    <div class="a" style="--d:3;flex:10"><h3 style="font-size:34px">ปัญหา</h3><p class="small">10 วิ · ชี้โซน 2</p></div>
+    <div class="a" style="--d:4;flex:10"><h3 style="font-size:34px">ผู้ใช้ที่เจอ</h3><p class="small">10 วิ · ชี้โซน 3</p></div>
+    <div class="a" style="--d:5;flex:15"><h3 style="font-size:34px">ทางแก้</h3><p class="small">15 วิ · ชี้โซน 5 + ชวนลอง</p></div>
+    <div class="a" style="--d:6;flex:15"><h3 style="font-size:34px">หลักฐาน</h3><p class="small">15 วิ · ชี้โซน 6</p></div>
+    <div class="a" style="--d:7;flex:5"><h3 style="font-size:34px">ปิด</h3><p class="small">5 วิ</p></div>
+  </div>
+  <p class="big a" style="--d:8;margin-top:80px">เกินเวลาให้ตัด <b>กระบวนการ</b> ก่อน อย่าตัด <b>หลักฐานจากการทดสอบ</b></p>
+</section>
+
+<!-- pitch video -->
+<section class="slide" data-title="pitch-video" style="padding-top:70px">
+  <span class="kicker a">ตัวอย่างคลิปพิช</span>
+  <h2 class="a" style="--d:1;font-size:64px">MediMate ใน 34 วินาที</h2>
+  <div style="display:grid;grid-template-columns:1180px 1fr;gap:60px;margin-top:30px;align-items:start">
+    <div class="pop" style="--d:2;background:var(--ink);border:6px solid var(--ink);border-radius:34px;overflow:hidden;transform:rotate(-.6deg)">
+      <video class="slidevid" controls preload="metadata" playsinline poster="../media/medimate_pitch_poster.jpg" src="../media/medimate_pitch.mp4" style="display:block;width:100%;aspect-ratio:16/9;background:#000"></video>
+    </div>
+    <div style="display:grid;gap:16px">
+      <div class="pop" style="--d:3;background:var(--lime);border:4px solid var(--ink);border-radius:26px;padding:20px 24px"><h3 style="font-size:34px">8 ฉาก</h3><p class="small">ปัญหา → เปิดตัว → 4 ฟีเจอร์ → ภาพรวม → ชวนลองใช้</p></div>
+      <div class="pop" style="--d:4;background:var(--pink);border:4px solid var(--ink);border-radius:26px;padding:20px 24px"><h3 style="font-size:34px">เสียงพากย์ AI</h3><p class="small">บทไทยราว 6–7 พยางค์ต่อวินาที ซับไทยในตัว</p></div>
+      <div class="pop" style="--d:5;background:var(--yellow);border:4px solid var(--ink);border-radius:26px;padding:20px 24px"><h3 style="font-size:34px">ข้อมูลตัวอย่าง</h3><p class="small">ไม่อ้างผลทดสอบ ฉากสุดท้ายนิ่งให้กรรมการอ่านชื่อแอป</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- video prompts -->
+<section class="slide" data-title="video-prompts">
+  <span class="kicker a">ทำคลิปแบบนี้ใน 4 prompt</span>
+  <h2 class="h-l a" style="--d:1">จากไฟล์ผลการศึกษา สู่คลิปพิช</h2>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin-top:60px">
+    <div class="tile pop" style="--d:2;background:var(--lime);padding:32px"><span class="badge b-fan">ติ่ง</span><div style="font-family:var(--display);font-weight:800;font-size:96px;line-height:1;margin-top:14px">1</div><h3 style="font-size:40px;margin-top:10px">Storyboard</h3><p class="small" style="margin-top:10px">ตารางฉาก เวลา ภาพบนจอ ข้อความ ≤8 คำ และบทบรรยาย</p></div>
+    <div class="tile pop" style="--d:3;background:var(--yellow);padding:32px"><span class="badge" style="background:#fff">AI สร้างวิดีโอ</span><div style="font-family:var(--display);font-weight:800;font-size:96px;line-height:1;margin-top:14px">2</div><h3 style="font-size:40px;margin-top:10px">โมชันกราฟิก</h3><p class="small" style="margin-top:10px">หน้าจอแอป 2.5D การ์ดลอย transition ต่อเนื่อง 16:9</p></div>
+    <div class="tile pop" style="--d:4;background:var(--pink);padding:32px"><span class="badge b-fan" style="background:#fff">ติ่ง</span><div style="font-family:var(--display);font-weight:800;font-size:96px;line-height:1;margin-top:14px">3</div><h3 style="font-size:40px;margin-top:10px">เสียงพากย์</h3><p class="small" style="margin-top:10px">แบ่งท่อนตามฉาก เขียนคำอ่านชื่อแอป ทำซับ .srt</p></div>
+    <div class="tile pop" style="--d:5;background:var(--blue);color:#fff;padding:32px"><span class="badge" style="background:#fff;color:var(--ink)">คนนอกด้อม</span><div style="font-family:var(--display);font-weight:800;font-size:96px;line-height:1;margin-top:14px">4</div><h3 style="font-size:40px;margin-top:10px">กรรมการจำลอง</h3><p class="small" style="margin-top:10px">ดูจบเข้าใจไหม ตรงไหนเร็วไป อ้างเกินจริงไหม</p></div>
+  </div>
+  <p class="big a" style="--d:7;margin-top:56px">Prompt เต็มทั้ง 4 ชุด อยู่ในส่วน <span class="pill" style="background:var(--lime)">คลิปพิช</span> ของ toolkit</p>
+</section>
+
+<!-- 20 judges -->
+<section class="slide bg-lime" data-title="judges">
+  <span class="kicker a">กรรมการ 4 แบบ ถาม 4 มุม</span>
+  <h2 class="h-l a" style="--d:1">ให้ AI สวมบทกรรมการ</h2>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-top:40px">
+    <div class="pop" style="--d:2"><svg class="mascot bob" width="200" height="212"><use href="#c-hci"/></svg><h3 style="font-size:38px;margin-top:8px">อาจารย์ HCI</h3><p class="white small" style="margin-top:16px;padding:22px 26px">"Persona นี้มาจากผู้ใช้กี่คน เลือกมาอย่างไร"</p></div>
+    <div class="pop" style="--d:3"><svg class="mascot bob2" width="200" height="212"><use href="#c-ux"/></svg><h3 style="font-size:38px;margin-top:8px">UX designer</h3><p class="white small" style="margin-top:16px;padding:22px 26px">"ถ้าผู้ใช้กดผิดขั้นตอน แอปพากลับมาอย่างไร"</p></div>
+    <div class="pop" style="--d:4"><svg class="mascot bob" width="200" height="212"><use href="#c-biz"/></svg><h3 style="font-size:38px;margin-top:8px">ผู้ประกอบการ</h3><p class="white small" style="margin-top:16px;padding:22px 26px">"ใครจ่ายเงิน ต่างจากสิ่งที่มีอยู่แล้วอย่างไร"</p></div>
+    <div class="pop" style="--d:5"><svg class="mascot bob2" width="200" height="212"><use href="#c-user"/></svg><h3 style="font-size:38px;margin-top:8px">ผู้ใช้จริง</h3><p class="white small" style="margin-top:16px;padding:22px 26px">"ต้องสมัครอะไรเยอะไหม ข้อมูลฉันปลอดภัยไหม"</p></div>
+  </div>
+</section>
+
+<!-- 21 mock QA + PREP -->
+<section class="slide" data-title="mock-qa" style="display:grid;grid-template-columns:1.15fr 1fr;gap:60px;align-items:start">
+  <div>
+    <span class="badge b-out a">คนนอกด้อม · แชทใหม่</span>
+    <h2 class="h-m a" style="--d:1;margin-top:20px;font-size:64px">ซ้อมถาม-ตอบทีละข้อ</h2>
+    <div class="prompt a type" style="--d:2;margin-top:30px;font-size:29px">คุณเป็นกรรมการ UX/UI Festival 2026
+ที่ใจดีแต่ถามตรง
+- ถามทีละ 1 ข้อ แล้วรอให้ฉันตอบ
+- ให้คะแนน 1-5 จุดดี จุดปรับ
+  และตัวอย่างคำตอบที่ดีกว่า
+- ถ้ากำกวมให้ถามจี้ 1 ครั้ง
+- ครบ 5 ข้อแล้วสรุปภาพรวม</div>
+    <p class="small a" style="--d:3;margin-top:22px;color:var(--soft)">ใช้โหมดคุยด้วยเสียงของแอป AI จะเหมือนวันจริงที่สุด</p>
+  </div>
+  <div>
+    <span class="badge b-fan a" style="--d:3">ติ่ง · แชทหลัก</span>
+    <h2 class="h-m a" style="--d:4;margin-top:20px;font-size:64px">ตอบแบบ PREP</h2>
+    <div style="display:grid;gap:18px;margin-top:30px">
+      <div class="tile pop" style="--d:5;background:var(--lime);padding:24px 30px"><h3 style="font-size:38px">P · Point</h3><p class="small">ตอบตรง ๆ ประโยคแรก</p></div>
+      <div class="tile pop" style="--d:6;background:var(--yellow);padding:24px 30px"><h3 style="font-size:38px">R · Reason</h3><p class="small">เหตุผลสั้น ๆ</p></div>
+      <div class="tile pop" style="--d:7;background:var(--pink);padding:24px 30px"><h3 style="font-size:38px">E · Example</h3><p class="small">หลักฐานจากไฟล์ ตัวเลข คำพูดผู้ใช้</p></div>
+      <div class="tile pop" style="--d:8;background:var(--purple);color:#fff;padding:24px 30px"><h3 style="font-size:38px">P · Point</h3><p class="small">ย้ำคำตอบอีกครั้ง ภายใน 30 วินาที</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 22 timeline -->
+<section class="slide" data-title="timeline">
+  <span class="kicker a">การบ้านก่อนวันโชว์</span>
+  <h2 class="h-l a" style="--d:1">จากคืนนี้ถึง 2 ธ.ค.</h2>
+  <div style="position:relative;margin-top:90px">
+    <svg width="1660" height="40" viewBox="0 0 1660 40" style="position:absolute;top:58px;left:0"><path class="draw" style="--len:1640;--d:1" d="M10 20H1650" stroke="#17142B" stroke-width="8" stroke-linecap="round" stroke-dasharray="1640"/></svg>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:30px;position:relative">
+      <div class="pop" style="--d:2"><div class="blobnum" style="width:150px;height:150px;font-size:56px;background:var(--purple);color:#fff">คืนนี้</div><h3 style="font-size:40px;margin-top:24px">เช็กข้อมูล</h3><p class="small" style="margin-top:8px">ใช้ prompt ขั้น 1 กับไฟล์ของทีม</p></div>
+      <div class="pop" style="--d:4"><div class="blobnum" style="width:150px;height:150px;font-size:64px;background:var(--yellow)">24</div><h3 style="font-size:40px;margin-top:24px">วางแผนทดสอบ</h3><p class="small" style="margin-top:8px">อบรม Let's Test It! แล้วเติมโซน 6</p></div>
+      <div class="pop" style="--d:6"><div class="blobnum" style="width:150px;height:150px;font-size:64px;background:var(--pink)">2×</div><h3 style="font-size:40px;margin-top:24px">ร่างและรีวิว</h3><p class="small" style="margin-top:8px">ติ่งร่าง คนนอกด้อมตรวจ อย่างน้อย 2 รอบ</p></div>
+      <div class="pop" style="--d:8"><div class="blobnum" style="width:150px;height:150px;font-size:64px;background:var(--orange);color:#fff">2</div><h3 style="font-size:40px;margin-top:24px">วันโชว์</h3><p class="small" style="margin-top:8px">ม.วลัยลักษณ์ · พิช 60 วิ + กิจกรรมผู้ชม</p></div>
+    </div>
+  </div>
+  <p class="body a" style="--d:9;margin-top:80px;color:var(--soft)">ถ้าผู้จัดส่ง template โปสเตอร์มา ให้ยึดตาม template เป็นหลัก แล้วใช้ 9 โซนช่วยจัดเนื้อหา</p>
+</section>
+
+<!-- 23 toolkit + skill -->
+<section class="slide bg-purple" data-title="toolkit">
+  <span class="kicker a" style="background:var(--lime);color:var(--ink)">เอากลับไปใช้ได้เลย</span>
+  <h2 class="a" style="--d:1;font-family:var(--display);font-weight:800;font-size:110px;line-height:1;letter-spacing:-.02em">Prompt to Poster <span class="pill" style="background:var(--lime);color:var(--ink)">Toolkit</span></h2>
+  <div style="display:grid;grid-template-columns:400px 1fr 1fr;gap:34px;margin-top:56px;align-items:stretch">
+    <div class="pop" style="--d:2;background:#fff;border:6px solid var(--ink);border-radius:36px;padding:26px;display:flex;flex-direction:column;align-items:center;gap:12px;transform:rotate(-2deg)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 370 370" class="segno"><g transform="scale(10)"><path fill="#fff" d="M0 0h37v37h-37z"/><path class="qrline" stroke="#17142b" d="M2 2.5h7m3 0h2m1 0h1m1 0h1m1 0h3m1 0h3m2 0h7m-33 1h1m5 0h1m2 0h1m1 0h6m1 0h1m2 0h1m1 0h2m1 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m4 0h1m1 0h1m2 0h2m2 0h1m2 0h2m1 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m2 0h1m1 0h1m1 0h5m1 0h1m2 0h1m3 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m3 0h2m1 0h2m2 0h2m1 0h5m1 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m1 0h3m3 0h3m2 0h3m4 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-23 1h1m1 0h1m2 0h3m2 0h3m-23 1h1m2 0h1m1 0h2m1 0h1m3 0h3m5 0h2m1 0h1m1 0h1m1 0h1m-26 1h1m1 0h2m3 0h1m1 0h3m2 0h3m1 0h2m2 0h4m4 0h1m-30 1h1m1 0h2m5 0h3m1 0h1m1 0h2m2 0h1m1 0h5m1 0h1m1 0h1m-30 1h2m2 0h1m1 0h3m1 0h1m2 0h1m2 0h3m2 0h3m1 0h2m1 0h2m-33 1h1m2 0h1m1 0h5m4 0h3m1 0h2m1 0h1m3 0h3m1 0h1m2 0h1m-32 1h1m2 0h2m5 0h1m2 0h2m1 0h1m1 0h4m1 0h1m1 0h1m1 0h1m2 0h2m-33 1h3m3 0h4m1 0h1m1 0h5m2 0h1m2 0h1m1 0h7m-32 1h3m2 0h1m2 0h2m1 0h1m1 0h2m1 0h4m1 0h4m1 0h1m1 0h2m1 0h1m-32 1h1m2 0h1m1 0h3m2 0h1m1 0h4m1 0h1m2 0h3m1 0h1m1 0h1m1 0h1m2 0h1m-32 1h2m5 0h1m1 0h2m6 0h1m4 0h3m2 0h1m1 0h1m-30 1h8m2 0h1m3 0h1m2 0h1m3 0h1m3 0h1m4 0h3m-33 1h6m2 0h1m1 0h1m8 0h3m1 0h1m1 0h3m3 0h1m-26 1h2m1 0h1m1 0h1m2 0h2m1 0h1m3 0h1m2 0h2m5 0h2m-32 1h2m4 0h2m3 0h4m1 0h1m2 0h2m2 0h1m1 0h2m2 0h3m-33 1h3m1 0h3m1 0h2m1 0h4m1 0h4m1 0h1m2 0h7m1 0h1m-32 1h3m1 0h1m1 0h1m1 0h2m2 0h1m1 0h1m4 0h2m2 0h1m3 0h2m2 0h1m-33 1h1m1 0h6m8 0h6m2 0h6m1 0h2m-25 1h1m1 0h1m3 0h1m2 0h1m1 0h2m1 0h3m3 0h2m2 0h1m-33 1h7m2 0h4m1 0h1m2 0h2m2 0h1m2 0h1m1 0h1m1 0h4m-32 1h1m5 0h1m1 0h1m1 0h2m1 0h1m1 0h1m1 0h2m1 0h3m1 0h1m3 0h1m3 0h1m-33 1h1m1 0h3m1 0h1m2 0h1m1 0h3m1 0h1m2 0h1m1 0h3m1 0h6m-30 1h1m1 0h3m1 0h1m1 0h1m1 0h9m7 0h1m1 0h2m-30 1h1m1 0h3m1 0h1m2 0h2m4 0h3m2 0h2m2 0h2m2 0h1m1 0h1m1 0h1m-33 1h1m5 0h1m2 0h6m2 0h1m2 0h2m2 0h1m-25 1h7m1 0h2m1 0h1m3 0h2m2 0h1m1 0h2m1 0h3m1 0h2m1 0h1"/></g></svg>
+
+      <span style="font-family:var(--thai-display);font-weight:600;font-size:30px;color:var(--ink)">สแกนเข้าเว็บ</span>
+    </div>
+    <div class="tile pop" style="--d:3;background:#fff;color:var(--ink)">
+      <h3 style="font-size:46px">หน้าเว็บ toolkit</h3>
+      <p class="body" style="margin-top:12px">โซนโปสเตอร์ · ตัวอย่าง MediMate · คลิปพิช · Visual Studio · เวทีพิช · คู่มือ</p>
+      <p class="st" style="margin-top:20px;background:var(--yellow);font-size:21px;white-space:nowrap">spidyhero.github.io/prompt-to-poster-toolkit</p>
+    </div>
+    <div class="tile pop" style="--d:4;background:var(--lime);color:var(--ink)">
+      <h3 style="font-size:46px">ดาวน์โหลดได้ในเว็บ</h3>
+      <p class="body" style="margin-top:12px">สไลด์นี้ (PDF) · Skill ทำโปสเตอร์ · Skill ทำคลิปพิช สำหรับติดตั้งใน Claude</p>
+    </div>
+  </div>
+  <svg class="mascot bob pop" style="--d:6;position:absolute;right:90px;top:70px" width="190" height="190"><use href="#c-fan"/></svg>
+</section>
+
+<!-- 24 closing -->
+<section class="slide bg-ink" data-title="thanks" style="display:flex;flex-direction:column;justify-content:center">
+  <h2 class="a" style="font-family:var(--display);font-weight:800;font-size:200px;line-height:.9;letter-spacing:-.03em">ขอบคุณครับ</h2>
+  <p class="body a" style="--d:3;margin-top:28px;color:#C8F04A;font-family:var(--display);font-weight:700">spidyhero.github.io/prompt-to-poster-toolkit</p>
+  <p class="big a" style="--d:2;margin-top:24px;color:#D9D4EC">ถาม-ตอบ แล้วเจอกันที่ <span class="pill" style="background:var(--lime);color:var(--ink);padding:4px 26px">2 ธ.ค. 69 · ม.วลัยลักษณ์</span></p>
+  <div style="position:absolute;right:130px;bottom:150px;display:flex;align-items:flex-end;gap:24px">
+    <div class="ctl pop" style="--d:3;transform:rotate(-4deg)"><div class="pic" style="background:#FFE24D;height:250px;width:210px"><svg class="mascot" width="200" height="240" viewBox="0 0 200 240"><use href="#c-fan"/></svg></div></div>
+    <div class="ctl pop" style="--d:4;transform:rotate(2deg)"><div class="pic" style="background:#FF8AC6;height:250px;width:210px"><svg class="mascot" width="200" height="240" viewBox="0 0 200 240"><use href="#c-out"/></svg></div></div>
+    <div class="ctl pop" style="--d:5;transform:rotate(-2deg)"><div class="pic" style="background:#C8F04A;height:250px;width:210px"><svg class="mascot" width="200" height="240" viewBox="0 0 200 240"><use href="#c-pres"/></svg></div></div>
+  </div>
+  <svg class="squig" style="left:-40px;bottom:-40px" width="900" height="180" viewBox="0 0 760 180"><path class="draw" style="--len:1200;--d:4" d="M20 120c60-80 120 80 180 0s120 80 180 0 120 80 180 0 100 40 160 10" fill="none" stroke="#C8F04A" stroke-width="30" stroke-linecap="round"/></svg>
+</section>
+
+</div></div>
+<div id="bar"></div>
+<div id="ui"><button id="prev" aria-label="สไลด์ก่อนหน้า">← ก่อนหน้า</button><span id="count">1 / 24</span><button id="next" aria-label="สไลด์ถัดไป">ถัดไป →</button></div>
+<script>
+const slides=[...document.querySelectorAll(".slide")],deck=document.getElementById("deck");
+let i=0;
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);deck.style.transform=`scale(${s})`}
+function go(n,push=true){
+  i=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,k)=>{s.classList.toggle("active",k===i);s.setAttribute("aria-hidden",k===i?"false":"true")});
+  document.getElementById("count").textContent=(i+1)+" / "+slides.length;
+  document.getElementById("bar").style.width=((i+1)/slides.length*100)+"%";
+  if(push){try{history.replaceState(null,"","#s"+(i+1))}catch(e){location.hash="s"+(i+1)}}
+}
+function fromHash(){const m=/^#s(\d+)$/.exec(location.hash);return m?+m[1]-1:0}
+addEventListener("resize",fit);
+addEventListener("hashchange",()=>go(fromHash(),false));
+addEventListener("keydown",e=>{if(e.target.closest&&e.target.closest("video"))return;
+  if(["ArrowRight","PageDown"," ","Enter"].includes(e.key)){e.preventDefault();go(i+1)}
+  else if(["ArrowLeft","PageUp","Backspace"].includes(e.key)){e.preventDefault();go(i-1)}
+  else if(e.key==="Home")go(0); else if(e.key==="End")go(slides.length-1);
+});
+document.getElementById("next").onclick=()=>go(i+1);
+document.getElementById("prev").onclick=()=>go(i-1);
+document.getElementById("viewport").addEventListener("click",e=>{if(e.target.closest("#ui")||e.target.closest("video"))return;go(e.clientX>innerWidth*0.35?i+1:i-1)});
+let tx=null;addEventListener("touchstart",e=>tx=e.touches[0].clientX,{passive:true});
+addEventListener("touchend",e=>{if(tx===null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50)go(d<0?i+1:i-1);tx=null});
+fit();go(fromHash(),false);
+</script>
+<script>
+(function(){
+ const rm=matchMedia("(prefers-reduced-motion: reduce)").matches;
+ const cols=["#C8F04A","#FF8AC6","#FFD43B","#3E68FF","#FF7A2F","#6B4BF2","#2BC48A"];
+ function rnd(a,b){return a+Math.random()*(b-a)}
+ const starP='<svg viewBox="0 0 40 40" width="100%" height="100%"><path d="M20 2C22 14 26 18 38 20C26 22 22 26 20 38C18 26 14 22 2 20C14 18 18 14 20 2Z" fill="FILL" stroke="#17142B" stroke-width="2.5" stroke-linejoin="round"/></svg>';
+ document.querySelectorAll(".slide").forEach((sl,idx)=>{
+   const d=document.createElement("div");d.className="deco";d.setAttribute("aria-hidden","true");
+   const spots=[[2,4],[95,5],[2,92],[96,90],[60,2],[98,46],[1,50]];
+   spots.sort(()=>Math.random()-.5).slice(0,6).forEach(([x,y],k)=>{
+     const e=document.createElement("span");const c=cols[(idx+k)%cols.length];const sz=rnd(26,54);
+     e.style.left=x+"%";e.style.top=y+"%";e.style.width=sz+"px";e.style.height=sz+"px";
+     e.style.setProperty("--t",rnd(5,9)+"s");e.style.setProperty("--dl",(-rnd(0,6))+"s");e.style.setProperty("--dx",rnd(-30,30)+"px");e.style.setProperty("--dy",rnd(-30,30)+"px");e.style.setProperty("--dr",rnd(-90,90)+"deg");
+     const kind=k%3;
+     if(kind===0)e.innerHTML=starP.replace("FILL",c);
+     else if(kind===1){e.style.borderRadius="50%";e.style.background=c;e.style.border="4px solid #17142B";e.style.width=e.style.height=(sz*.6)+"px"}
+     else{e.style.borderRadius="50%";e.style.border="6px dashed "+c;}
+     d.appendChild(e)});
+   sl.prepend(d)});
+ // typewriter
+ const tw=[...document.querySelectorAll(".prompt.type")].map(el=>({el,txt:el.textContent}));
+ let timers=[];
+ function type(slide){timers.forEach(clearInterval);timers=[];
+   tw.forEach(o=>{if(!slide.contains(o.el)){o.el.textContent=o.txt;o.el.classList.remove("caret");return}
+     if(rm){o.el.textContent=o.txt;return}
+     o.el.textContent="";o.el.classList.add("caret");let i=0;
+     setTimeout(()=>{const t=setInterval(()=>{i+=2;o.el.textContent=o.txt.slice(0,i);if(i>=o.txt.length){clearInterval(t);setTimeout(()=>o.el.classList.remove("caret"),1500)}},22);timers.push(t)},700)})}
+ // hook into go()
+ const _go=window.go;
+ const all=[...document.querySelectorAll(".slide")];
+ window.go=function(n,push){const prev=document.querySelector(".slide.active");_go(n,push);document.querySelectorAll(".slidevid").forEach(v=>{if(!v.closest(".slide.active"))v.pause()});const a=document.querySelector(".slide.active");
+   if(prev&&a&&prev!==a&&!rm){const fwd=all.indexOf(a)>all.indexOf(prev);all.forEach(x=>x.classList.remove("inR","inL","outL","outR","leaving"));
+     a.classList.add(fwd?"inR":"inL");prev.classList.add("leaving",fwd?"outL":"outR");
+     clearTimeout(window._pt);window._pt=setTimeout(()=>all.forEach(x=>x.classList.remove("inR","inL","outL","outR","leaving")),700)}
+   if(a)type(a)};
+ // reveal origin follows click side
+ document.getElementById("viewport").addEventListener("click",e=>{const x=e.clientX/innerWidth*100,y=e.clientY/innerHeight*100;document.querySelectorAll(".slide").forEach(s=>{s.style.setProperty("--cx",x+"%");s.style.setProperty("--cy",y+"%")})},true);
+ const a=document.querySelector(".slide.active");if(a)type(a);
+})();
+</script>
+</body>
+</html>
