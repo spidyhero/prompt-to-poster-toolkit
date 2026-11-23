@@ -467,7 +467,7 @@ details p{margin-top:8px;color:var(--soft)}
 @media (max-width:900px){.aip,.agrid{grid-template-columns:1fr}.aip .pv{position:static}.raw{grid-template-columns:repeat(2,1fr)}.layers{grid-template-columns:repeat(3,1fr)}}
 
 
-.dlrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:20px}
+.dlrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
 .dl{border:3px solid var(--ink);border-radius:var(--r-lg);padding:20px 22px;display:grid;gap:10px;align-content:start}
 .dl h3{font-size:1.3rem}.dl p{font-size:.92rem}
 .dl .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
@@ -942,6 +942,7 @@ details p{margin-top:8px;color:var(--soft)}
 <section class="wrap" id="prompts">
   <span class="kicker">คลัง prompt</span>
   <h2>17 prompt ใน 6 ขั้น</h2>
+  <p class="lead">ยังไม่มีไฟล์ผลการศึกษาของทีม? ดาวน์โหลด <a href="#sample-dl">รายงานสมมติ MediMate ยาเตือนใจ</a> (Word หรือ PDF) ไปอัปโหลดในแชทหลัก แล้วใช้ prompt ตั้งแต่ขั้น 1 ถึงขั้น 6 ผลที่ได้จะเทียบกับโปสเตอร์ตัวอย่าง MediMate ได้</p>
   <div class="filters" role="toolbar" aria-label="กรอง prompt">
     <button class="chipbtn" data-f="all" aria-pressed="true">ทั้งหมด</button>
     <button class="chipbtn" data-f="fan" aria-pressed="false">เฉพาะติ่ง</button>
@@ -1019,9 +1020,11 @@ details p{margin-top:8px;color:var(--soft)}
 </section>
 <section class="wrap" id="skill">
   <span class="kicker">ดาวน์โหลด</span>
-  <h2>ดาวน์โหลดสไลด์และ Skill</h2>
+  <h2>ดาวน์โหลดสไลด์ ไฟล์ฝึก และ Skill</h2>
   <p class="lead">Skill คือชุดคำสั่งที่ติดตั้งให้ Claude ครั้งเดียว แล้ว Claude จะทำงานตามขั้นตอนของ toolkit นี้ให้อัตโนมัติ ไม่ต้อง copy prompt ทีละอัน และแก้ไขให้เป็นแบบของทีมเองได้</p>
   <div class="dlrow">
+    <div class="dl rv" id="sample-dl" style="background:#E1E8FF"><span class="badge" style="background:#fff;justify-self:start">ไฟล์ฝึก</span><h3>รายงานสมมติ MediMate ยาเตือนใจ</h3><p>รายงานผลการศึกษาตัวอย่าง 9 หน้า มีครบตั้งแต่ปัญหา แบบสอบถาม 40 คน สัมภาษณ์ 8 คน persona ฟีเจอร์ wireframe UI 4 หน้าจอ จนถึงผลทดสอบ SUS รายบุคคล ใช้อัปโหลดเข้าแชทหลักแล้วลองใช้ prompt ทีละขั้น ถ้าทีมยังไม่มีไฟล์ของตัวเอง</p>
+      <div class="btns"><a class="dlb" href="https://spidyhero.github.io/prompt-to-poster-toolkit/downloads/MediMate_sample_report.docx" target="_blank" rel="noopener">⬇ Word (.docx)</a><a class="dlb" style="background:#fff;color:var(--ink);border:2px solid var(--ink)" href="https://spidyhero.github.io/prompt-to-poster-toolkit/downloads/MediMate_sample_report.pdf" target="_blank" rel="noopener">⬇ PDF</a></div><span class="meta">ข้อมูลสมมติทั้งหมด · Word 240 KB · PDF 670 KB</span></div>
     <div class="dl rv" id="slides-dl" style="background:var(--yellow)"><span class="badge" style="background:#fff;justify-self:start">สไลด์บรรยาย</span><h3>From Prompt to Visual Pitch</h3><p>สไลด์ 33 หน้าที่ใช้ในการอบรม ดาวน์โหลดเป็น PDF หรือเปิดฉบับเว็บที่มีภาพเคลื่อนไหวและคลิปตัวอย่าง</p>
       <div class="btns"><a class="dlb" href="https://spidyhero.github.io/prompt-to-poster-toolkit/downloads/From_Prompt_to_Visual_Pitch_slides.pdf">⬇ ดาวน์โหลด PDF</a><a class="dlb" style="background:#fff;color:var(--ink);border:2px solid var(--ink)" href="https://spidyhero.github.io/prompt-to-poster-toolkit/slides/">▶ เปิดสไลด์ฉบับเว็บ</a></div><span class="meta">PDF 4.5 MB · 16:9</span></div>
     <div class="dl rv" style="background:var(--lime)"><span class="badge" style="background:#fff;justify-self:start">Skill 1</span><h3>ux-poster-pitch-coach</h3><p>คิดและออกแบบโปสเตอร์ UX/UI 85×120 cm จากไฟล์ผลการศึกษา ครบ 6 ขั้น ตั้งแต่เช็กข้อมูล ร่าง 9 โซน ภาพ รีวิว พิช จนถึงซ้อมตอบกรรมการ</p>
